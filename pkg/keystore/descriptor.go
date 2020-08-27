@@ -12,6 +12,10 @@ type DescriptorTokens struct {
 	Scheme Scheme
 }
 
+// Match the base key using regex, and ignore everything else.
+// FIXME: make the regex match more robust.
+var descriptorRegex = regexp.MustCompile(`.*\((?:\[.*])?([\w+]*).*\).*`)
+
 // ParseDescriptor is a very basic tokenizer of output descriptor strings.
 //
 // References:
@@ -34,10 +38,7 @@ func ParseDescriptor(descriptor string) (DescriptorTokens, error) {
 			"failed to parse descriptor %v", descriptor)
 	}
 
-	// Match the base key using regex, and ignore everything else.
-	// FIXME: make the regex match more robust.
-	r := regexp.MustCompile(`.*\((?:\[.*])?([\w+]*).*\).*`)
-	groups := r.FindStringSubmatch(descriptor)
+	groups := descriptorRegex.FindStringSubmatch(descriptor)
 	if len(groups) != 2 {
 		return DescriptorTokens{}, errors.Wrapf(
 			ErrInvalidDescriptor, "failed to parse descriptor %v", descriptor)
