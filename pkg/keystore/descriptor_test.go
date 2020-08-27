@@ -1,6 +1,7 @@
 package keystore
 
 import (
+	"github.com/pkg/errors"
 	"reflect"
 	"testing"
 )
@@ -10,7 +11,7 @@ func TestParseDescriptor(t *testing.T) {
 		name       string
 		descriptor string
 		want       DescriptorTokens
-		err        string
+		wantErr    error
 	}{
 		{
 			name:       "legacy",
@@ -47,34 +48,38 @@ func TestParseDescriptor(t *testing.T) {
 		{
 			name:       "invalid scheme",
 			descriptor: "abcd(deadbeef)",
-			err:        "unrecognized scheme",
+			wantErr:    ErrUnrecognizedScheme,
 		},
 		{
 			name:       "invalid descriptor",
 			descriptor: "wpkh(deadbeef",
-			err:        "invalid descriptor",
+			wantErr:    ErrInvalidDescriptor,
 		},
 		{
 			name:       "empty descriptor",
 			descriptor: "wpkh()",
-			err:        "invalid descriptor",
+			wantErr:    ErrInvalidDescriptor,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := ParseDescriptor(tt.descriptor)
-			if err != nil {
-				if tt.err == "" {
-					t.Fatalf("ParseDescriptor: unexpected error - %v", err)
-				}
+			if err != nil && tt.wantErr == nil {
+				t.Fatalf("ParseDescriptor() unexpected error: %v", err)
+			}
 
-				if tt.err != err.Error() {
-					t.Fatalf("ParseDescriptor: expected error '%v', got '%v'", tt.err, err)
-				}
+			if err == nil && tt.wantErr != nil {
+				t.Fatalf("ParseDescriptor() got no error, want '%v'",
+					tt.wantErr)
+			}
+
+			if err != nil && tt.wantErr != errors.Cause(err) {
+				t.Fatalf("ParseDescriptor() got error = %v, want = %v",
+					err, tt.wantErr)
 			}
 
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ParseDescriptor() = %v, want %v", got, tt.want)
+				t.Errorf("ParseDescriptor() got = %v, want = %v", got, tt.want)
 			}
 		})
 	}

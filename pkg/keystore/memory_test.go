@@ -2,7 +2,7 @@ package keystore
 
 import (
 	"context"
-	"errors"
+	"github.com/pkg/errors"
 	"reflect"
 	"strconv"
 	"testing"
@@ -73,7 +73,7 @@ func TestInMemoryKeystore_GetCreate(t *testing.T) {
 		{
 			name:       "invalid descriptor",
 			descriptor: "bad xpub",
-			wantErr:    errors.New("unrecognized scheme"),
+			wantErr:    ErrUnrecognizedScheme,
 		},
 		{
 			name:       "native segwit",
@@ -107,7 +107,7 @@ func TestInMemoryKeystore_GetCreate(t *testing.T) {
 					tt.wantErr)
 			}
 
-			if err != nil && tt.wantErr.Error() != err.Error() {
+			if err != nil && errors.Cause(err) != tt.wantErr {
 				t.Fatalf("Create() got error '%v', want '%v'",
 					err, tt.wantErr)
 			}
@@ -124,12 +124,12 @@ func TestInMemoryKeystore_GetCreate(t *testing.T) {
 
 			if dbErr == nil && err != nil {
 				t.Fatalf("Get() got no error, want '%v'",
-					errors.New("does not exist"))
+					ErrDescriptorNotFound)
 			}
 
-			if dbErr != nil && dbErr.Error() != errors.New("does not exist").Error() {
+			if dbErr != nil && errors.Cause(dbErr) != ErrDescriptorNotFound {
 				t.Fatalf("Get() got error '%v', want '%v'",
-					dbErr, errors.New("does not exist"))
+					dbErr, ErrDescriptorNotFound)
 			}
 
 			if !reflect.DeepEqual(gotDB, tt.want) {

@@ -3,9 +3,8 @@ package keystore
 import (
 	"context"
 	"encoding/hex"
-	"errors"
-
 	"github.com/ledgerhq/bitcoin-keychain-svc/bitcoin"
+	"github.com/pkg/errors"
 )
 
 // InMemoryKeystore implements the Keystore interface where the storage
@@ -34,7 +33,7 @@ func NewInMemoryKeystore() Keystore {
 func (s *InMemoryKeystore) Get(descriptor string) (KeychainInfo, error) {
 	document, ok := s.db[descriptor]
 	if !ok {
-		return KeychainInfo{}, errors.New("does not exist")
+		return KeychainInfo{}, ErrDescriptorNotFound
 	}
 
 	return document.Main, nil
@@ -48,7 +47,8 @@ func (s *InMemoryKeystore) Get(descriptor string) (KeychainInfo, error) {
 func (s *InMemoryKeystore) Create(descriptor string) (KeychainInfo, error) {
 	tokens, err := ParseDescriptor(descriptor)
 	if err != nil {
-		return KeychainInfo{}, err
+		return KeychainInfo{}, errors.Wrapf(
+			err, "failed to parse descriptor %v", descriptor)
 	}
 
 	ckdFunc := func(childIndex uint32) (string, string, error) {
@@ -66,12 +66,14 @@ func (s *InMemoryKeystore) Create(descriptor string) (KeychainInfo, error) {
 
 	externalPublicKey, externalChainCode, err := ckdFunc(0)
 	if err != nil {
-		return KeychainInfo{}, err
+		return KeychainInfo{}, errors.Wrapf(
+			err, "failed to derive xpub %v at index %v", tokens.XPub, 0)
 	}
 
 	internalPublicKey, internalChainCode, err := ckdFunc(1)
 	if err != nil {
-		return KeychainInfo{}, err
+		return KeychainInfo{}, errors.Wrapf(
+			err, "failed to derive xpub %v at index %v", tokens.XPub, 1)
 	}
 
 	keychainInfo := KeychainInfo{

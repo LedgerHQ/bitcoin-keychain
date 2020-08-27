@@ -1,7 +1,7 @@
 package keystore
 
 import (
-	"errors"
+	"github.com/pkg/errors"
 	"regexp"
 	"strings"
 )
@@ -30,7 +30,8 @@ func ParseDescriptor(descriptor string) (DescriptorTokens, error) {
 	} else if strings.HasPrefix(descriptor, "pkh(") {
 		scheme = BIP44
 	} else {
-		return DescriptorTokens{}, errors.New("unrecognized scheme")
+		return DescriptorTokens{}, errors.Wrapf(ErrUnrecognizedScheme,
+			"failed to parse descriptor %v", descriptor)
 	}
 
 	// Match the base key using regex, and ignore everything else.
@@ -38,12 +39,14 @@ func ParseDescriptor(descriptor string) (DescriptorTokens, error) {
 	r := regexp.MustCompile(`.*\((?:\[.*])?([\w+]*).*\).*`)
 	groups := r.FindStringSubmatch(descriptor)
 	if len(groups) != 2 {
-		return DescriptorTokens{}, errors.New("invalid descriptor")
+		return DescriptorTokens{}, errors.Wrapf(
+			ErrInvalidDescriptor, "failed to parse descriptor %v", descriptor)
 	}
 
 	xpub := groups[1]
 	if xpub == "" {
-		return DescriptorTokens{}, errors.New("invalid descriptor")
+		return DescriptorTokens{}, errors.Wrapf(ErrInvalidDescriptor,
+			"empty xpub in descriptor %v", descriptor)
 	}
 
 	return DescriptorTokens{
