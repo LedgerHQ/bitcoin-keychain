@@ -172,4 +172,7 @@ Temporary Items
 # End of https://www.toptal.com/developers/gitignore/api/go,intellij,macos,linux
 
 # Ignore generated protobuf stubs
-pb/v1/service.pb.go
+*.pb.go
+
+# Ignore artifact of compiling cmd/server.go
+server

@@ -14,15 +14,17 @@ const (
 	entryPoint = "cmd/server.go"
 	ldFlags    = "-X $PACKAGE/version/version.commitHash=$COMMIT_HASH " +
 		"-X $PACKAGE/version/version.buildDate=$BUILD_DATE"
-	protoPlugins  = "plugins=grpc"
-	protoDir      = "pb/v1"
-	protoFileName = "service.proto"
+	protoPlugins = "plugins=grpc"
+	protoFile    = "service.proto"
+	protoDir     = "pb/v1"
 )
 
 // Allow user to override executables on UNIX-like systems.
-var goexe = "go"      // GOEXE=xxx mage build
-var protoc = "protoc" // PROTOC=xxx mage proto
-var buf = "buf"       // BUF=xxx mage protolist
+var (
+	goexe  = "go"     // GOEXE=xxx mage build
+	protoc = "protoc" // PROTOC=xxx mage proto
+	buf    = "buf"    // BUF=xxx mage protolist
+)
 
 func init() {
 	if exe := os.Getenv("GOEXE"); exe != "" {
@@ -43,9 +45,17 @@ func init() {
 }
 
 func Proto() error {
-	return sh.Run(protoc,
-		fmt.Sprintf("--go_out=%s:%s", protoPlugins, protoDir), // protoc flags
-		fmt.Sprintf("%s/%s", protoDir, protoFileName))         // input .proto
+	runner := func(proto string, dir string) error {
+		return sh.Run(protoc,
+			fmt.Sprintf("--go_out=%s:%s", protoPlugins, dir), // protoc flags
+			fmt.Sprintf("%s/%s", dir, proto)) // input .proto
+	}
+
+	if err := runner(protoFile, protoDir); err != nil {
+		return err
+	}
+
+	return runner("service.proto", "bitcoin")
 }
 
 func Buf() error {
@@ -54,8 +64,10 @@ func Buf() error {
 		return err
 	}
 
-	// Run Buf lint checks on the protobuf files.
-	if err := sh.Run(buf, "check", "lint"); err != nil {
+	protoPath := fmt.Sprintf("%s/%s", protoDir, protoFile)
+
+	// Run Buf lint checks on the protobuf file.
+	if err := sh.Run(buf, "check", "lint", "--file", protoPath); err != nil {
 		return err
 	}
 

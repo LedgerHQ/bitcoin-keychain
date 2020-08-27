@@ -1,7 +1,12 @@
 package keystore
 
+// Keystore is an interface that all keychain storage backends must implement.
+// Currently, there are two Keystore implementations available:
+//   InMemoryKeystore: useful for unit-tests
+//   RedisKeystore:    TBA
 type Keystore interface {
-	Get(string) (KeychainInfo, error)
+	Get(descriptor string) (KeychainInfo, error)
+	Create(descriptor string) (KeychainInfo, error)
 }
 
 // Scheme defines the scheme on which a keychain entry is based.
@@ -18,6 +23,11 @@ const (
 	BIP84 Scheme = "BIP84"
 )
 
+// KeychainInfo models the global information related to an account registered
+// in the keystore.
+//
+// Rather than using the associated gRPC message struct, it is defined here
+// independently to avoid having gRPC dependency in this package.
 type KeychainInfo struct {
 	Descriptor              string `json:"descriptor"`
 	XPub                    string `json:"xpub"`                       // Extended public key serialized with standard HD version bytes
@@ -37,9 +47,12 @@ type derivationToPublicKeyMap map[string]struct {
 	Used      bool   `json:"used"`       // Whether any txn history at derivation
 }
 
-// KeystoreSchema is a map containing keychain data corresponding to an
-// account descriptor.
-type KeystoreSchema map[string]struct {
+// Schema is a map between account descriptors and account information.
+type Schema map[string]Meta
+
+// Meta is a struct containing account details corresponding to a descriptor,
+// such as derivations, addresses, etc.
+type Meta struct {
 	Main        KeychainInfo             `json:"main"`
 	Derivations derivationToPublicKeyMap `json:"derivations"`
 	Addresses   map[string][2]uint32     `json:"addresses"` // derivation path at HD tree depth 5
