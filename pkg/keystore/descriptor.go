@@ -1,9 +1,10 @@
 package keystore
 
 import (
-	"github.com/pkg/errors"
 	"regexp"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 // DescriptorTokens models the result of parsing an output descriptor.
@@ -27,13 +28,14 @@ var descriptorRegex = regexp.MustCompile(`.*\((?:\[.*])?([\w+]*).*\).*`)
 func ParseDescriptor(descriptor string) (DescriptorTokens, error) {
 	var scheme Scheme
 
-	if strings.HasPrefix(descriptor, "sh(wpkh(") {
+	switch {
+	case strings.HasPrefix(descriptor, "sh(wpkh("):
 		scheme = BIP49
-	} else if strings.HasPrefix(descriptor, "wpkh(") {
+	case strings.HasPrefix(descriptor, "wpkh("):
 		scheme = BIP84
-	} else if strings.HasPrefix(descriptor, "pkh(") {
+	case strings.HasPrefix(descriptor, "pkh("):
 		scheme = BIP44
-	} else {
+	default:
 		return DescriptorTokens{}, errors.Wrapf(ErrUnrecognizedScheme,
 			"failed to parse descriptor %v", descriptor)
 	}

@@ -23,6 +23,8 @@ const (
 	BIP84 Scheme = "BIP84"
 )
 
+const lookaheadSize = 20
+
 // KeychainInfo models the global information related to an account registered
 // in the keystore.
 //

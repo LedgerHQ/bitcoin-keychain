@@ -8,32 +8,34 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-type controller struct {
+// Controller is a type that implements the pb.KeychainServiceServer
+// interface.
+type Controller struct {
 	store keystore.Keystore
 }
 
-func (c controller) CreateKeychain(
+func (c Controller) CreateKeychain(
 	ctx context.Context, request *pb.CreateKeychainRequest,
 ) (*pb.GetKeychainInfoResponse, error) {
 	panic("implement me")
 }
 
-func (c controller) DeleteKeychain(
+func (c Controller) DeleteKeychain(
 	ctx context.Context, request *pb.DeleteKeychainRequest,
 ) (*emptypb.Empty, error) {
 	panic("implement me")
 }
 
-func (c controller) GetKeychainInfo(
+func (c Controller) GetKeychainInfo(
 	ctx context.Context, request *pb.GetKeychainInfoRequest,
 ) (*pb.GetKeychainInfoResponse, error) {
 	panic("implement me")
 }
 
-// NewKeychainController returns a new instance of a controller struct that
+// NewKeychainController returns a new instance of a Controller struct that
 // implements the pb.KeychainServiceServer interface.
-func NewKeychainController() *controller {
-	return &controller{
+func NewKeychainController() *Controller {
+	return &Controller{
 		store: keystore.NewInMemoryKeystore(),
 	}
 }

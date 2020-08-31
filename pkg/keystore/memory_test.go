@@ -2,10 +2,11 @@ package keystore
 
 import (
 	"context"
-	"github.com/pkg/errors"
 	"reflect"
 	"strconv"
 	"testing"
+
+	"github.com/pkg/errors"
 
 	"github.com/ledgerhq/bitcoin-keychain-svc/bitcoin"
 	"google.golang.org/grpc"

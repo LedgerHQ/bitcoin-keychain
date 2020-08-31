@@ -1,9 +1,10 @@
 package keystore
 
 import (
-	"github.com/pkg/errors"
 	"reflect"
 	"testing"
+
+	"github.com/pkg/errors"
 )
 
 func TestParseDescriptor(t *testing.T) {

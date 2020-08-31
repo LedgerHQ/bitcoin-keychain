@@ -3,6 +3,7 @@ package keystore
 import (
 	"context"
 	"encoding/hex"
+
 	"github.com/ledgerhq/bitcoin-keychain-svc/bitcoin"
 	"github.com/pkg/errors"
 )
@@ -86,7 +87,7 @@ func (s *InMemoryKeystore) Create(descriptor string) (KeychainInfo, error) {
 		InternalPublicKey:       internalPublicKey,
 		InternalChainCode:       internalChainCode,
 		MaxInternalIndex:        0,
-		LookaheadSize:           20,
+		LookaheadSize:           lookaheadSize,
 		Scheme:                  tokens.Scheme,
 	}
 

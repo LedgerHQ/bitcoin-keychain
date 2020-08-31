@@ -48,7 +48,7 @@ func Proto() error {
 	runner := func(proto string, dir string) error {
 		return sh.Run(protoc,
 			fmt.Sprintf("--go_out=%s:%s", protoPlugins, dir), // protoc flags
-			fmt.Sprintf("%s/%s", dir, proto)) // input .proto
+			fmt.Sprintf("%s/%s", dir, proto))                 // input .proto
 	}
 
 	if err := runner(protoFile, protoDir); err != nil {
