@@ -8,13 +8,13 @@ import "google/protobuf/empty.proto";
 
 service KeychainService {
   // Create a new keychain by descriptor.
-  rpc CreateKeychain(CreateKeychainRequest) returns (GetKeychainInfoResponse) {}
+  rpc CreateKeychain(CreateKeychainRequest) returns (KeychainInfo) {}
 
   // Delete a keychain by descriptor.
   rpc DeleteKeychain(DeleteKeychainRequest) returns (google.protobuf.Empty) {}
 
   // Get keychain metadata.
-  rpc GetKeychainInfo(GetKeychainInfoRequest) returns (GetKeychainInfoResponse) {}
+  rpc GetKeychainInfo(GetKeychainInfoRequest) returns (KeychainInfo) {}
 }
 
 message CreateKeychainRequest {
@@ -30,7 +30,7 @@ message GetKeychainInfoRequest {
   string account_descriptor = 1;
 }
 
-message GetKeychainInfoResponse {
+message KeychainInfo {
   // Account descriptor of the keychain, at HD depth 3. MUST include the key
   // origin information.
   // Ref: https://github.com/bitcoin/bitcoin/blob/master/doc/descriptors.md

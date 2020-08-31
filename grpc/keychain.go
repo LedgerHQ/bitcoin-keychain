@@ -16,7 +16,7 @@ type Controller struct {
 
 func (c Controller) CreateKeychain(
 	ctx context.Context, request *pb.CreateKeychainRequest,
-) (*pb.GetKeychainInfoResponse, error) {
+) (*pb.KeychainInfo, error) {
 	r, err := c.store.Create(request.AccountDescriptor)
 	if err != nil {
 		return nil, err
@@ -33,7 +33,7 @@ func (c Controller) DeleteKeychain(
 
 func (c Controller) GetKeychainInfo(
 	ctx context.Context, request *pb.GetKeychainInfoRequest,
-) (*pb.GetKeychainInfoResponse, error) {
+) (*pb.KeychainInfo, error) {
 	r, err := c.store.Get(request.AccountDescriptor)
 	if err != nil {
 		return nil, err

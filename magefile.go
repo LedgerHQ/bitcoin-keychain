@@ -48,7 +48,7 @@ func Proto() error {
 	runner := func(proto string, dir string) error {
 		return sh.Run(protoc,
 			fmt.Sprintf("--go_out=%s:%s", protoPlugins, dir), // protoc flags
-			fmt.Sprintf("%s/%s", dir, proto))                 // input .proto
+			fmt.Sprintf("%s/%s", dir, proto)) // input .proto
 	}
 
 	if err := runner(protoFile, protoDir); err != nil {
@@ -64,10 +64,8 @@ func Buf() error {
 		return err
 	}
 
-	protoPath := fmt.Sprintf("%s/%s", protoDir, protoFile)
-
 	// Run Buf lint checks on the protobuf file.
-	if err := sh.Run(buf, "check", "lint", "--file", protoPath); err != nil {
+	if err := sh.Run(buf, "check", "lint"); err != nil {
 		return err
 	}
 
