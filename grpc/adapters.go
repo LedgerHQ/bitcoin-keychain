@@ -9,6 +9,7 @@ import (
 // instance to the corresponding protobuf message format.
 func KeychainInfo(value keystore.KeychainInfo) *pb.KeychainInfo {
 	var scheme pb.KeychainInfo_Scheme
+
 	switch value.Scheme {
 	case keystore.BIP44:
 		scheme = pb.KeychainInfo_SCHEME_BIP44

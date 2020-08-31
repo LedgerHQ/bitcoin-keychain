@@ -48,7 +48,7 @@ func Proto() error {
 	runner := func(proto string, dir string) error {
 		return sh.Run(protoc,
 			fmt.Sprintf("--go_out=%s:%s", protoPlugins, dir), // protoc flags
-			fmt.Sprintf("%s/%s", dir, proto)) // input .proto
+			fmt.Sprintf("%s/%s", dir, proto))                 // input .proto
 	}
 
 	if err := runner(protoFile, protoDir); err != nil {
@@ -104,10 +104,21 @@ func TestRaceCover() error {
 func Lint() error {
 	linterArgs := []string{
 		"run",
-		"--disable-all",
-		"--enable=govet",
-		"--enable=gofmt",
-		"--enable=gosec",
+		"-E=golint",
+		"-E=gosec",
+		"-E=interfacer",
+		"-E=unconvert",
+		"-E=dupl",
+		"-E=goconst",
+		"-E=gofmt",
+		"-E=goimports",
+		"-E=maligned",
+		"-E=depguard",
+		"-E=misspell",
+		"-E=prealloc",
+		"-E=whitespace",
+		"-E=wsl",
+		"-E=gocritic",
 	}
 
 	if err := sh.Run("golangci-lint", linterArgs...); err != nil {
