@@ -43,20 +43,14 @@ message KeychainInfo {
   // Ref: https://github.com/satoshilabs/slips/blob/master/slip-0132.md
   string slip32_extended_public_key = 3;
 
-  // External chain public key at HD tree depth 4.
-  string external_public_key = 4;
-
-  // External chain chain code at HD tree depth 4.
-  string external_chain_code = 5;
+  // External chain extended public key at HD tree depth 4.
+  string external_xpub = 4;
 
   // Number of external chain addresses in keychain.
   uint32 max_external_index = 6;
 
-  // Internal chain public key at HD tree depth 4.
-  string internal_public_key = 7;
-
-  // Internal chain chain code at HD tree depth 4.
-  string internal_chain_code = 8;
+  // Internal chain extended public key at HD tree depth 4.
+  string internal_xpub = 7;
 
   // Number of internal chain addresses in keychain.
   uint32 max_internal_index = 9;

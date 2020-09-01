@@ -1,9 +1,6 @@
 package keystore
 
 import (
-	"context"
-	"encoding/hex"
-
 	"github.com/ledgerhq/bitcoin-keychain-svc/bitcoin"
 	"github.com/pkg/errors"
 )
@@ -52,26 +49,13 @@ func (s *InMemoryKeystore) Create(descriptor string) (KeychainInfo, error) {
 			err, "failed to parse descriptor %v", descriptor)
 	}
 
-	ckdFunc := func(childIndex uint32) (string, string, error) {
-		child, err := s.client.DeriveExtendedKey(
-			context.Background(), &bitcoin.DeriveExtendedKeyRequest{
-				ExtendedKey: tokens.XPub,
-				Derivation:  []uint32{childIndex},
-			})
-		if err != nil {
-			return "", "", nil
-		}
-
-		return hex.EncodeToString(child.PublicKey), hex.EncodeToString(child.ChainCode), nil
-	}
-
-	externalPublicKey, externalChainCode, err := ckdFunc(0)
+	externalChild, err := childKDF(s.client, tokens.XPub, 0)
 	if err != nil {
 		return KeychainInfo{}, errors.Wrapf(
 			err, "failed to derive xpub %v at index %v", tokens.XPub, 0)
 	}
 
-	internalPublicKey, internalChainCode, err := ckdFunc(1)
+	internalChild, err := childKDF(s.client, tokens.XPub, 1)
 	if err != nil {
 		return KeychainInfo{}, errors.Wrapf(
 			err, "failed to derive xpub %v at index %v", tokens.XPub, 1)
@@ -81,11 +65,9 @@ func (s *InMemoryKeystore) Create(descriptor string) (KeychainInfo, error) {
 		Descriptor:              descriptor,
 		XPub:                    tokens.XPub,
 		SLIP32ExtendedPublicKey: tokens.XPub, // TODO: Convert XPub to SLIP-0132 form
-		ExternalPublicKey:       externalPublicKey,
-		ExternalChainCode:       externalChainCode,
+		ExternalXPub:            externalChild.ExtendedKey,
 		MaxExternalIndex:        0,
-		InternalPublicKey:       internalPublicKey,
-		InternalChainCode:       internalChainCode,
+		InternalXPub:            internalChild.ExtendedKey,
 		MaxInternalIndex:        0,
 		LookaheadSize:           lookaheadSize,
 		Scheme:                  tokens.Scheme,

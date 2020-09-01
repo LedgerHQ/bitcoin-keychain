@@ -34,11 +34,9 @@ type KeychainInfo struct {
 	Descriptor              string `json:"descriptor"`
 	XPub                    string `json:"xpub"`                       // Extended public key serialized with standard HD version bytes
 	SLIP32ExtendedPublicKey string `json:"slip32_extended_public_key"` // Extended public key serialized with SLIP-0132 HD version bytes
-	ExternalPublicKey       string `json:"external_public_key"`        // External chain public key at HD tree depth 4
-	ExternalChainCode       string `json:"external_chain_code"`        // External chain chain code at HD tree depth 4
+	ExternalXPub            string `json:"external_xpub"`              // External chain extended public key at HD tree depth 4
 	MaxExternalIndex        uint32 `json:"max_external_index"`         // Number of external chain addresses in keychain
-	InternalPublicKey       string `json:"internal_public_key"`        // Internal chain public key at HD tree depth 4
-	InternalChainCode       string `json:"internal_chain_code"`        // Internal chain chain code at HD tree depth 4
+	InternalXPub            string `json:"internal_xpub"`              // Internal chain extended public key at HD tree depth 4
 	MaxInternalIndex        uint32 `json:"max_internal_index"`         // Number of external chain addresses in keychain
 	LookaheadSize           uint32 `json:"lookahead_size"`             // Numerical size of the lookahead zone
 	Scheme                  Scheme `json:"scheme"`                     // String identifier for keychain scheme
