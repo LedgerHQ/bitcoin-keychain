@@ -42,7 +42,7 @@ func (s *InMemoryKeystore) Get(descriptor string) (KeychainInfo, error) {
 //
 // Only initial state is populated, so no addresses will be inserted into the
 // keystore by this method.
-func (s *InMemoryKeystore) Create(descriptor string) (KeychainInfo, error) {
+func (s *InMemoryKeystore) Create(descriptor string, net Network) (KeychainInfo, error) {
 	tokens, err := ParseDescriptor(descriptor)
 	if err != nil {
 		return KeychainInfo{}, errors.Wrapf(
@@ -71,6 +71,7 @@ func (s *InMemoryKeystore) Create(descriptor string) (KeychainInfo, error) {
 		MaxInternalIndex:        0,
 		LookaheadSize:           lookaheadSize,
 		Scheme:                  tokens.Scheme,
+		Network:                 net,
 	}
 
 	s.db[descriptor] = Meta{

@@ -6,7 +6,7 @@ package keystore
 //   RedisKeystore:    TBA
 type Keystore interface {
 	Get(descriptor string) (KeychainInfo, error)
-	Create(descriptor string) (KeychainInfo, error)
+	Create(descriptor string, net Network) (KeychainInfo, error)
 }
 
 // Scheme defines the scheme on which a keychain entry is based.
@@ -23,6 +23,21 @@ const (
 	BIP84 Scheme = "BIP84"
 )
 
+// Network defines the network (and therefore the chain parameters)
+// that a keychain is associated to.
+type Network string
+
+const (
+	// Mainnet indicates the main Bitcoin network
+	Mainnet Network = "mainnet"
+
+	// Testnet3 indicates the current Bitcoin test network
+	Testnet3 Network = "testnet3"
+
+	// Regtest indicates the Bitcoin regression test network
+	Regtest Network = "regtest"
+)
+
 const lookaheadSize = 20
 
 // KeychainInfo models the global information related to an account registered
@@ -31,15 +46,16 @@ const lookaheadSize = 20
 // Rather than using the associated gRPC message struct, it is defined here
 // independently to avoid having gRPC dependency in this package.
 type KeychainInfo struct {
-	Descriptor              string `json:"descriptor"`
-	XPub                    string `json:"xpub"`                       // Extended public key serialized with standard HD version bytes
-	SLIP32ExtendedPublicKey string `json:"slip32_extended_public_key"` // Extended public key serialized with SLIP-0132 HD version bytes
-	ExternalXPub            string `json:"external_xpub"`              // External chain extended public key at HD tree depth 4
-	MaxExternalIndex        uint32 `json:"max_external_index"`         // Number of external chain addresses in keychain
-	InternalXPub            string `json:"internal_xpub"`              // Internal chain extended public key at HD tree depth 4
-	MaxInternalIndex        uint32 `json:"max_internal_index"`         // Number of external chain addresses in keychain
-	LookaheadSize           uint32 `json:"lookahead_size"`             // Numerical size of the lookahead zone
-	Scheme                  Scheme `json:"scheme"`                     // String identifier for keychain scheme
+	Descriptor              string  `json:"descriptor"`
+	XPub                    string  `json:"xpub"`                       // Extended public key serialized with standard HD version bytes
+	SLIP32ExtendedPublicKey string  `json:"slip32_extended_public_key"` // Extended public key serialized with SLIP-0132 HD version bytes
+	ExternalXPub            string  `json:"external_xpub"`              // External chain extended public key at HD tree depth 4
+	MaxExternalIndex        uint32  `json:"max_external_index"`         // Number of external chain addresses in keychain
+	InternalXPub            string  `json:"internal_xpub"`              // Internal chain extended public key at HD tree depth 4
+	MaxInternalIndex        uint32  `json:"max_internal_index"`         // Number of external chain addresses in keychain
+	LookaheadSize           uint32  `json:"lookahead_size"`             // Numerical size of the lookahead zone
+	Scheme                  Scheme  `json:"scheme"`                     // String identifier for keychain scheme
+	Network                 Network `json:"network"`                    // String denoting the network to use for encoding addresses
 }
 
 type derivationToPublicKeyMap map[string]struct {

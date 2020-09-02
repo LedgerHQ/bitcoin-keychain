@@ -68,6 +68,7 @@ func TestInMemoryKeystore_GetCreate(t *testing.T) {
 	tests := []struct {
 		name       string
 		descriptor string
+		network    Network
 		want       KeychainInfo
 		wantErr    error
 	}{
@@ -79,6 +80,7 @@ func TestInMemoryKeystore_GetCreate(t *testing.T) {
 		{
 			name:       "native segwit",
 			descriptor: "wpkh(xpub1111)",
+			network:    Mainnet,
 			want: KeychainInfo{
 				Descriptor:              "wpkh(xpub1111)",
 				XPub:                    "xpub1111",
@@ -89,6 +91,7 @@ func TestInMemoryKeystore_GetCreate(t *testing.T) {
 				MaxInternalIndex:        0,
 				LookaheadSize:           20,
 				Scheme:                  "BIP84",
+				Network:                 Mainnet,
 			},
 		},
 	}
@@ -96,7 +99,7 @@ func TestInMemoryKeystore_GetCreate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			keystore := NewMockInMemoryKeystore()
 
-			got, err := keystore.Create(tt.descriptor)
+			got, err := keystore.Create(tt.descriptor, tt.network)
 			if err != nil && tt.wantErr == nil {
 				t.Fatalf("Create() unexpected error: %v", err)
 			}
