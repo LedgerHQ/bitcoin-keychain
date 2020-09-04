@@ -61,14 +61,16 @@ message KeychainInfo {
   // External chain extended public key at HD tree depth 4.
   string external_xpub = 4;
 
-  // Number of external chain addresses in keychain.
-  uint32 max_external_index = 6;
+  // Address index on the external chain, at which a fresh receive address
+  // must be derived.
+  uint32 external_fresh_address_index = 6;
 
   // Internal chain extended public key at HD tree depth 4.
   string internal_xpub = 7;
 
-  // Number of internal chain addresses in keychain.
-  uint32 max_internal_index = 9;
+  // Address index on the internal chain, at which a fresh change address
+  // must be derived.
+  uint32 internal_fresh_address_index = 9;
 
   // Numerical size of the lookahead zone.
   uint32 lookahead_size = 10;

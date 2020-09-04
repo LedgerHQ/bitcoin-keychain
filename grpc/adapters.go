@@ -1,6 +1,10 @@
 package grpc
 
 import (
+	"fmt"
+
+	"github.com/pkg/errors"
+
 	"github.com/ledgerhq/bitcoin-keychain-svc/pb/v1"
 	"github.com/ledgerhq/bitcoin-keychain-svc/pkg/keystore"
 )
@@ -22,14 +26,27 @@ func KeychainInfo(value keystore.KeychainInfo) *pb.KeychainInfo {
 	}
 
 	return &pb.KeychainInfo{
-		AccountDescriptor:       value.Descriptor,
-		Xpub:                    value.XPub,
-		Slip32ExtendedPublicKey: value.SLIP32ExtendedPublicKey,
-		ExternalXpub:            value.ExternalXPub,
-		MaxExternalIndex:        value.MaxExternalIndex,
-		InternalXpub:            value.InternalXPub,
-		MaxInternalIndex:        value.MaxInternalIndex,
-		LookaheadSize:           value.LookaheadSize,
-		Scheme:                  scheme,
+		AccountDescriptor:         value.Descriptor,
+		Xpub:                      value.XPub,
+		Slip32ExtendedPublicKey:   value.SLIP32ExtendedPublicKey,
+		ExternalXpub:              value.ExternalXPub,
+		ExternalFreshAddressIndex: value.ExternalFreshAddressIndex,
+		InternalXpub:              value.InternalXPub,
+		InternalFreshAddressIndex: value.InternalFreshAddressIndex,
+		LookaheadSize:             value.LookaheadSize,
+		Scheme:                    scheme,
+	}
+}
+
+func Network(params pb.BitcoinNetwork) (keystore.Network, error) {
+	switch params {
+	case pb.BitcoinNetwork_BITCOIN_NETWORK_MAINNET:
+		return keystore.Mainnet, nil
+	case pb.BitcoinNetwork_BITCOIN_NETWORK_TESTNET3:
+		return keystore.Testnet3, nil
+	case pb.BitcoinNetwork_BITCOIN_NETWORK_REGTEST:
+		return keystore.Regtest, nil
+	default:
+		return "", errors.Wrap(ErrUnrecognizedNetwork, fmt.Sprint(params))
 	}
 }

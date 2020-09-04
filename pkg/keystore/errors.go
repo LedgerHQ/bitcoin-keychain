@@ -11,6 +11,10 @@ var (
 	// is invalid or missing.
 	ErrUnrecognizedScheme = errors.New("unrecognized scheme")
 
+	// ErrUnrecognizedChange indicates that the Change index encountered was
+	// non-standard, and cannot be handled properly.
+	ErrUnrecognizedChange = errors.New("unrecognized change")
+
 	// ErrDescriptorNotFound indicates an attempt to get a descriptor from a
 	// keystore that has not been registered.
 	ErrDescriptorNotFound = errors.New("descriptor not found")

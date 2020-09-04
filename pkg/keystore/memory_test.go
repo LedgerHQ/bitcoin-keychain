@@ -2,6 +2,8 @@ package keystore
 
 import (
 	"context"
+	"encoding/hex"
+	"fmt"
 	"reflect"
 	"strconv"
 	"testing"
@@ -52,8 +54,21 @@ func (c mockBitcoinClient) EncodeAddress(
 	in *bitcoin.EncodeAddressRequest,
 	opts ...grpc.CallOption,
 ) (*bitcoin.EncodeAddressResponse, error) {
+	net, err := networkFromChainParams(in.ChainParams)
+	if err != nil {
+		panic(err)
+	}
+
+	scheme, err := schemeFromEncoding(in.Encoding)
+	if err != nil {
+		panic(err)
+	}
+
+	addr := fmt.Sprintf("%s-%s-%s",
+		hex.EncodeToString(in.PublicKey), scheme, net)
+
 	return &bitcoin.EncodeAddressResponse{
-		Address: "deadbeef",
+		Address: addr,
 	}, nil
 }
 
@@ -82,16 +97,16 @@ func TestInMemoryKeystore_GetCreate(t *testing.T) {
 			descriptor: "wpkh(xpub1111)",
 			network:    Mainnet,
 			want: KeychainInfo{
-				Descriptor:              "wpkh(xpub1111)",
-				XPub:                    "xpub1111",
-				SLIP32ExtendedPublicKey: "xpub1111",
-				ExternalXPub:            "xpub1111->0",
-				MaxExternalIndex:        0,
-				InternalXPub:            "xpub1111->1",
-				MaxInternalIndex:        0,
-				LookaheadSize:           20,
-				Scheme:                  "BIP84",
-				Network:                 Mainnet,
+				Descriptor:                "wpkh(xpub1111)",
+				XPub:                      "xpub1111",
+				SLIP32ExtendedPublicKey:   "xpub1111",
+				ExternalXPub:              "xpub1111->0",
+				ExternalFreshAddressIndex: 0,
+				InternalXPub:              "xpub1111->1",
+				InternalFreshAddressIndex: 0,
+				LookaheadSize:             20,
+				Scheme:                    "BIP84",
+				Network:                   Mainnet,
 			},
 		},
 	}
@@ -137,6 +152,116 @@ func TestInMemoryKeystore_GetCreate(t *testing.T) {
 			if !reflect.DeepEqual(gotDB, tt.want) {
 				t.Fatalf("Get() got = '%v', want = '%v'",
 					gotDB, tt.want)
+			}
+		})
+	}
+}
+
+func TestInMemoryKeystore_GetFreshAddress(t *testing.T) {
+	tests := []struct {
+		name       string
+		descriptor string
+		change     Change
+		network    Network
+		want       string
+		wantErr    error
+	}{
+		{
+			name:       "p2pkh mainnet",
+			descriptor: "wpkh(xpub1111)",
+			change:     External,
+			network:    Mainnet,
+			want:       "deadbeef00-BIP84-mainnet",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			keystore := NewMockInMemoryKeystore()
+			if _, err := keystore.Create(tt.descriptor, tt.network); err != nil {
+				panic(err)
+			}
+
+			got, err := keystore.GetFreshAddress(tt.descriptor, tt.change)
+			if err != nil && tt.wantErr == nil {
+				t.Fatalf("GetFreshAddress() unexpected error: %v", err)
+			}
+
+			if err == nil && tt.wantErr != nil {
+				t.Fatalf("GetFreshAddress() got no error, want '%v'",
+					tt.wantErr)
+			}
+
+			if err != nil && errors.Cause(err) != tt.wantErr {
+				t.Fatalf("GetFreshAddress() got error '%v', want '%v'",
+					err, tt.wantErr)
+			}
+
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Fatalf("GetFreshAddress() got = '%v', want = '%v'",
+					got, tt.want)
+			}
+		})
+	}
+}
+
+func TestInMemoryKeystore_GetFreshAddresses(t *testing.T) {
+	tests := []struct {
+		name       string
+		descriptor string
+		change     Change
+		network    Network
+		size       uint32
+		want       []string
+		wantErr    error
+	}{
+		{
+			name:       "empty",
+			descriptor: "wpkh(xpub1111)",
+			change:     External,
+			network:    Mainnet,
+			size:       0,
+			want:       []string{},
+		},
+		{
+			name:       "p2pkh mainnet multi",
+			descriptor: "wpkh(xpub1111)",
+			change:     External,
+			network:    Mainnet,
+			size:       5,
+			want: []string{
+				"deadbeef00-BIP84-mainnet",
+				"deadbeef01-BIP84-mainnet",
+				"deadbeef02-BIP84-mainnet",
+				"deadbeef03-BIP84-mainnet",
+				"deadbeef04-BIP84-mainnet",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			keystore := NewMockInMemoryKeystore()
+			if _, err := keystore.Create(tt.descriptor, tt.network); err != nil {
+				panic(err)
+			}
+
+			got, err := keystore.GetFreshAddresses(tt.descriptor, tt.change, tt.size)
+			if err != nil && tt.wantErr == nil {
+				t.Fatalf("GetFreshAddresses() unexpected error: %v", err)
+			}
+
+			if err == nil && tt.wantErr != nil {
+				t.Fatalf("GetFreshAddresses() got no error, want '%v'",
+					tt.wantErr)
+			}
+
+			if err != nil && errors.Cause(err) != tt.wantErr {
+				t.Fatalf("GetFreshAddresses() got error '%v', want '%v'",
+					err, tt.wantErr)
+			}
+
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Fatalf("GetFreshAddresses() got = '%v', want = '%v'",
+					got, tt.want)
 			}
 		})
 	}

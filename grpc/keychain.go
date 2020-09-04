@@ -17,7 +17,12 @@ type Controller struct {
 func (c Controller) CreateKeychain(
 	ctx context.Context, request *pb.CreateKeychainRequest,
 ) (*pb.KeychainInfo, error) {
-	r, err := c.store.Create(request.AccountDescriptor)
+	net, err := Network(request.Network)
+	if err != nil {
+		return nil, err
+	}
+
+	r, err := c.store.Create(request.AccountDescriptor, net)
 	if err != nil {
 		return nil, err
 	}

@@ -62,16 +62,16 @@ func (s *InMemoryKeystore) Create(descriptor string, net Network) (KeychainInfo,
 	}
 
 	keychainInfo := KeychainInfo{
-		Descriptor:              descriptor,
-		XPub:                    tokens.XPub,
-		SLIP32ExtendedPublicKey: tokens.XPub, // TODO: Convert XPub to SLIP-0132 form
-		ExternalXPub:            externalChild.ExtendedKey,
-		MaxExternalIndex:        0,
-		InternalXPub:            internalChild.ExtendedKey,
-		MaxInternalIndex:        0,
-		LookaheadSize:           lookaheadSize,
-		Scheme:                  tokens.Scheme,
-		Network:                 net,
+		Descriptor:                descriptor,
+		XPub:                      tokens.XPub,
+		SLIP32ExtendedPublicKey:   tokens.XPub, // TODO: Convert XPub to SLIP-0132 form
+		ExternalXPub:              externalChild.ExtendedKey,
+		ExternalFreshAddressIndex: 0,
+		InternalXPub:              internalChild.ExtendedKey,
+		InternalFreshAddressIndex: 0,
+		LookaheadSize:             lookaheadSize,
+		Scheme:                    tokens.Scheme,
+		Network:                   net,
 	}
 
 	s.db[descriptor] = Meta{
@@ -81,4 +81,72 @@ func (s *InMemoryKeystore) Create(descriptor string, net Network) (KeychainInfo,
 	}
 
 	return keychainInfo, nil
+}
+
+// GetFreshAddress retrieves an unused address from the in-memory keystore at a
+// given Change index, for the keychain corresponding to the provided
+// descriptor.
+//
+// See GetFreshAddresses for getting fresh addresses in bulk.
+//
+// This is a read-only operation.
+func (s InMemoryKeystore) GetFreshAddress(descriptor string, change Change) (string, error) {
+	k, ok := s.db[descriptor]
+	if !ok {
+		return "", ErrDescriptorNotFound
+	}
+
+	changeXPub, err := k.ChangeXPub(change)
+	if err != nil {
+		return "", err
+	}
+
+	freshAddressIndex, err := k.FreshAddressIndex(change)
+	if err != nil {
+		return "", err
+	}
+
+	addr, err := deriveAddressAtIndex(s.client, changeXPub, freshAddressIndex,
+		k.Main.Scheme, k.Main.Network)
+	if err != nil {
+		return "", err
+	}
+
+	return addr, nil
+}
+
+// GetFreshAddresses retrieves bulk fresh addresses from the in-memory keystore.
+//
+// See GetFreshAddress for further details.
+//
+// This is a read-only operation.
+func (s InMemoryKeystore) GetFreshAddresses(descriptor string, change Change, size uint32) ([]string, error) {
+	addrs := []string{}
+
+	k, ok := s.db[descriptor]
+	if !ok {
+		return addrs, ErrDescriptorNotFound
+	}
+
+	changeXPub, err := k.ChangeXPub(change)
+	if err != nil {
+		return addrs, err
+	}
+
+	freshAddressIndex, err := k.FreshAddressIndex(change)
+	if err != nil {
+		return addrs, err
+	}
+
+	for i := uint32(0); i < size; i++ {
+		addr, err := deriveAddressAtIndex(s.client, changeXPub, freshAddressIndex+i,
+			k.Main.Scheme, k.Main.Network)
+		if err != nil {
+			return addrs, err
+		}
+
+		addrs = append(addrs, addr)
+	}
+
+	return addrs, nil
 }
