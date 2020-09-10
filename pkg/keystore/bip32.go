@@ -22,8 +22,12 @@ type DerivationPath [2]uint32
 
 // ChangeIndex returns the change index at BIP32 path-level 4, from a given
 // DerivationPath.
-func (path DerivationPath) ChangeIndex() uint32 {
-	return path[0]
+func (path DerivationPath) ChangeIndex() Change {
+	if path[0] == 0 {
+		return External
+	}
+
+	return Internal // path[0] is 1
 }
 
 // ChangeIndex returns the address index at BIP32 path-level 5, from a given

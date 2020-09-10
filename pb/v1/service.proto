@@ -15,6 +15,9 @@ service KeychainService {
 
   // Get keychain metadata.
   rpc GetKeychainInfo(GetKeychainInfoRequest) returns (KeychainInfo) {}
+
+  // Mark derivation path as used
+  rpc MarkPathAsUsed(MarkPathAsUsedRequest) returns (google.protobuf.Empty) {}
 }
 
 // BitcoinNetwork enumerates the list of all supported Bitcoin networks. It
@@ -93,4 +96,16 @@ message KeychainInfo {
   // This field is mostly useful for encoding addresses for a specific
   // network.
   BitcoinNetwork network = 12;
+}
+
+message MarkPathAsUsedRequest {
+  // Account descriptor of the keychain
+  string account_descriptor = 1;
+
+  // Derivation path relative to BIP-32 account path-level.
+  //
+  // The derivation path is represented by an array of child indexes. Each
+  // child index in the path must be between 0 and 2^31-1, i.e., they should
+  // not be hardened.
+  repeated uint32 derivation = 2;
 }

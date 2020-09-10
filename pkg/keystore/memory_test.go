@@ -97,16 +97,16 @@ func TestInMemoryKeystore_GetCreate(t *testing.T) {
 			descriptor: "wpkh(xpub1111)",
 			network:    Mainnet,
 			want: KeychainInfo{
-				Descriptor:                "wpkh(xpub1111)",
-				XPub:                      "xpub1111",
-				SLIP32ExtendedPublicKey:   "xpub1111",
-				ExternalXPub:              "xpub1111->0",
-				ExternalFreshAddressIndex: 0,
-				InternalXPub:              "xpub1111->1",
-				InternalFreshAddressIndex: 0,
-				LookaheadSize:             20,
-				Scheme:                    "BIP84",
-				Network:                   Mainnet,
+				Descriptor:                  "wpkh(xpub1111)",
+				XPub:                        "xpub1111",
+				SLIP32ExtendedPublicKey:     "xpub1111",
+				ExternalXPub:                "xpub1111->0",
+				MaxConsecutiveExternalIndex: 0,
+				InternalXPub:                "xpub1111->1",
+				MaxConsecutiveInternalIndex: 0,
+				LookaheadSize:               20,
+				Scheme:                      "BIP84",
+				Network:                     Mainnet,
 			},
 		},
 	}
@@ -262,6 +262,153 @@ func TestInMemoryKeystore_GetFreshAddresses(t *testing.T) {
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Fatalf("GetFreshAddresses() got = '%v', want = '%v'",
 					got, tt.want)
+			}
+		})
+	}
+}
+
+func TestInMemoryKeystore_MarkPathAsUsed(t *testing.T) {
+	keystore := NewMockInMemoryKeystore()
+
+	descriptor := "wpkh(xpub1111)"
+	if _, err := keystore.Create(descriptor, Mainnet); err != nil {
+		panic(err)
+	}
+
+	workflow := []struct {
+		name               string
+		path               DerivationPath
+		change             Change
+		size               uint32
+		wantFreshAddresses []string
+		wantFreshAddress   string
+		wantErr            error
+	}{
+		{
+			name:   "mark 0/0 as used",
+			path:   DerivationPath{0, 0},
+			change: External,
+			size:   5,
+			wantFreshAddresses: []string{
+				"deadbeef01-BIP84-mainnet", // should have no gaps
+				"deadbeef02-BIP84-mainnet",
+				"deadbeef03-BIP84-mainnet",
+				"deadbeef04-BIP84-mainnet",
+				"deadbeef05-BIP84-mainnet",
+			},
+			wantFreshAddress: "deadbeef01-BIP84-mainnet",
+		},
+		{
+			name:   "mark 0/2 as used",
+			path:   DerivationPath{0, 2}, // introduce a gap
+			change: External,
+			size:   5,
+			wantFreshAddresses: []string{
+				"deadbeef01-BIP84-mainnet", // should detect the gap
+				"deadbeef03-BIP84-mainnet",
+				"deadbeef04-BIP84-mainnet",
+				"deadbeef05-BIP84-mainnet",
+				"deadbeef06-BIP84-mainnet",
+			},
+			wantFreshAddress: "deadbeef01-BIP84-mainnet",
+		},
+		{
+			name:   "mark 0/1 as used",
+			path:   DerivationPath{0, 1}, // fill the gap
+			change: External,
+			size:   5,
+			wantFreshAddresses: []string{
+				"deadbeef03-BIP84-mainnet", // should have no gaps
+				"deadbeef04-BIP84-mainnet",
+				"deadbeef05-BIP84-mainnet",
+				"deadbeef06-BIP84-mainnet",
+				"deadbeef07-BIP84-mainnet",
+			},
+			wantFreshAddress: "deadbeef03-BIP84-mainnet",
+		},
+		{
+			// internal chain should be unaffected by previous mutations
+			name:   "mark 1/0 as used",
+			path:   DerivationPath{1, 0},
+			change: Internal,
+			size:   5,
+			wantFreshAddresses: []string{
+				"deadbeef01-BIP84-mainnet",
+				"deadbeef02-BIP84-mainnet",
+				"deadbeef03-BIP84-mainnet",
+				"deadbeef04-BIP84-mainnet",
+				"deadbeef05-BIP84-mainnet",
+			},
+			wantFreshAddress: "deadbeef01-BIP84-mainnet",
+		},
+		{
+			name:   "mark 1/3 as used",
+			path:   DerivationPath{1, 3},
+			change: Internal,
+			size:   5,
+			wantFreshAddresses: []string{
+				"deadbeef01-BIP84-mainnet",
+				"deadbeef02-BIP84-mainnet",
+				"deadbeef04-BIP84-mainnet",
+				"deadbeef05-BIP84-mainnet",
+				"deadbeef06-BIP84-mainnet",
+			},
+			wantFreshAddress: "deadbeef01-BIP84-mainnet",
+		},
+		{
+			name:   "mark 1/6 as used",
+			path:   DerivationPath{1, 6},
+			change: Internal,
+			size:   5,
+			wantFreshAddresses: []string{
+				"deadbeef01-BIP84-mainnet",
+				"deadbeef02-BIP84-mainnet",
+				"deadbeef04-BIP84-mainnet",
+				"deadbeef05-BIP84-mainnet",
+				"deadbeef07-BIP84-mainnet",
+			},
+			wantFreshAddress: "deadbeef01-BIP84-mainnet",
+		},
+		{
+			name:   "mark 1/1 as used",
+			path:   DerivationPath{1, 1},
+			change: Internal,
+			size:   5,
+			wantFreshAddresses: []string{
+				"deadbeef02-BIP84-mainnet",
+				"deadbeef04-BIP84-mainnet",
+				"deadbeef05-BIP84-mainnet",
+				"deadbeef07-BIP84-mainnet",
+				"deadbeef08-BIP84-mainnet",
+			},
+			wantFreshAddress: "deadbeef02-BIP84-mainnet",
+		},
+	}
+
+	for _, tt := range workflow {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := keystore.MarkPathAsUsed(descriptor, tt.path); err != nil {
+				t.Fatalf("MarkPathAsUsed() unexpected error: %v", err)
+			}
+
+			gotBulk, err := keystore.GetFreshAddresses(descriptor, tt.change, tt.size)
+			if err != nil {
+				t.Fatalf("GetFreshAddresses() unexpected error: %v", err)
+			}
+
+			if !reflect.DeepEqual(gotBulk, tt.wantFreshAddresses) {
+				t.Fatalf("GetFreshAddresses() got = '%v', want = '%v'",
+					gotBulk, tt.wantFreshAddresses)
+			}
+
+			got, err := keystore.GetFreshAddress(descriptor, tt.change)
+			if err != nil {
+				t.Fatalf("GetFreshAddress() unexpected error: %v", err)
+			}
+
+			if !reflect.DeepEqual(got, tt.wantFreshAddress) {
+				t.Fatalf("GetFreshAddress() got = '%v', want = '%v'",
+					got, tt.wantFreshAddress)
 			}
 		})
 	}

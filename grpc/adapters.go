@@ -30,14 +30,16 @@ func KeychainInfo(value keystore.KeychainInfo) *pb.KeychainInfo {
 		Xpub:                      value.XPub,
 		Slip32ExtendedPublicKey:   value.SLIP32ExtendedPublicKey,
 		ExternalXpub:              value.ExternalXPub,
-		ExternalFreshAddressIndex: value.ExternalFreshAddressIndex,
+		ExternalFreshAddressIndex: value.MaxConsecutiveExternalIndex,
 		InternalXpub:              value.InternalXPub,
-		InternalFreshAddressIndex: value.InternalFreshAddressIndex,
+		InternalFreshAddressIndex: value.MaxConsecutiveInternalIndex,
 		LookaheadSize:             value.LookaheadSize,
 		Scheme:                    scheme,
 	}
 }
 
+// Network is an adapter function to convert a gRPC pb.BitcoinNetwork
+// to keystore.Network instance.
 func Network(params pb.BitcoinNetwork) (keystore.Network, error) {
 	switch params {
 	case pb.BitcoinNetwork_BITCOIN_NETWORK_MAINNET:
@@ -49,4 +51,15 @@ func Network(params pb.BitcoinNetwork) (keystore.Network, error) {
 	default:
 		return "", errors.Wrap(ErrUnrecognizedNetwork, fmt.Sprint(params))
 	}
+}
+
+// DerivationPath is an adapter function to convert a derivation path (slice)
+// to a keystore.DerivationPath instance.
+func DerivationPath(path []uint32) (keystore.DerivationPath, error) {
+	if len(path) != 2 {
+		return keystore.DerivationPath{}, errors.Wrap(
+			ErrInvalidDerivationPath, fmt.Sprintf("%v", path))
+	}
+
+	return keystore.DerivationPath{path[0], path[1]}, nil
 }

@@ -47,6 +47,21 @@ func (c Controller) GetKeychainInfo(
 	return KeychainInfo(r), nil
 }
 
+func (c Controller) MarkPathAsUsed(
+	ctx context.Context, request *pb.MarkPathAsUsedRequest,
+) (*emptypb.Empty, error) {
+	path, err := DerivationPath(request.Derivation)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := c.store.MarkPathAsUsed(request.AccountDescriptor, path); err != nil {
+		return nil, err
+	}
+
+	return nil, nil
+}
+
 // NewKeychainController returns a new instance of a Controller struct that
 // implements the pb.KeychainServiceServer interface.
 func NewKeychainController() *Controller {
