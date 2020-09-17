@@ -73,3 +73,16 @@ func DerivationPath(path []uint32) (keystore.DerivationPath, error) {
 
 	return keystore.DerivationPath{path[0], path[1]}, nil
 }
+
+// Change is an adapter function to convert a gRPC pb.Change to an instance of
+// keystore.Change.
+func Change(change pb.Change) (keystore.Change, error) {
+	switch change {
+	case pb.Change_CHANGE_EXTERNAL:
+		return keystore.External, nil
+	case pb.Change_CHANGE_INTERNAL:
+		return keystore.Internal, nil
+	default:
+		return -1, errors.Wrap(ErrUnrecognizedChange, fmt.Sprint(change))
+	}
+}

@@ -62,6 +62,23 @@ func (c Controller) MarkPathAsUsed(
 	return nil, nil
 }
 
+func (c Controller) GetFreshAddresses(
+	ctx context.Context, request *pb.GetFreshAddressesRequest,
+) (*pb.GetFreshAddressesResponse, error) {
+	change, err := Change(request.Change)
+	if err != nil {
+		return nil, err
+	}
+
+	addrs, err := c.store.GetFreshAddresses(
+		request.AccountDescriptor, change, request.BatchSize)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.GetFreshAddressesResponse{Addresses: addrs}, nil
+}
+
 // NewKeychainController returns a new instance of a Controller struct that
 // implements the pb.KeychainServiceServer interface.
 func NewKeychainController() *Controller {

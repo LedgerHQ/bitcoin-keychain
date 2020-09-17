@@ -18,6 +18,9 @@ service KeychainService {
 
   // Mark derivation path as used
   rpc MarkPathAsUsed(MarkPathAsUsedRequest) returns (google.protobuf.Empty) {}
+
+  // Get fresh addresses for a registered keychain and the provided Change.
+  rpc GetFreshAddresses(GetFreshAddressesRequest) returns (GetFreshAddressesResponse) {}
 }
 
 // BitcoinNetwork enumerates the list of all supported Bitcoin networks. It
@@ -32,6 +35,14 @@ enum BitcoinNetwork {
   BITCOIN_NETWORK_MAINNET     = 1;  // Main network
   BITCOIN_NETWORK_TESTNET3    = 2;  // Current test network (since Bitcoin Core v0.7)
   BITCOIN_NETWORK_REGTEST     = 3;  // Regression test network
+}
+
+// Change is an enum type to indicate whether an address belongs to the
+// external chain (receive) or the internal chain (change).
+enum Change {
+  CHANGE_UNSPECIFIED = 0;  // fallback value if unrecognized / unspecified
+  CHANGE_EXTERNAL    = 1;  // external chain
+  CHANGE_INTERNAL    = 2;  // internal chain
 }
 
 message CreateKeychainRequest {
@@ -62,7 +73,7 @@ message KeychainInfo {
   string slip32_extended_public_key = 3;
 
   // Numerical size of the lookahead zone.
-  uint32 lookahead_size = 10;
+  uint32 lookahead_size = 4;
 
   // Scheme defines the scheme on which a keychain entry is based.
   enum Scheme {
@@ -71,7 +82,7 @@ message KeychainInfo {
     SCHEME_BIP49       = 2;  // indicates that the keychain scheme is segwit.
     SCHEME_BIP84       = 3;  // indicates that the keychain scheme is native segwit.
   }
-  Scheme scheme = 11;
+  Scheme scheme = 5;
 
   // Network for which the keychain is defined.
   //
@@ -81,7 +92,7 @@ message KeychainInfo {
   //
   // This field is mostly useful for encoding addresses for a specific
   // network.
-  BitcoinNetwork network = 12;
+  BitcoinNetwork network = 6;
 }
 
 message MarkPathAsUsedRequest {
@@ -94,4 +105,19 @@ message MarkPathAsUsedRequest {
   // child index in the path must be between 0 and 2^31-1, i.e., they should
   // not be hardened.
   repeated uint32 derivation = 2;
+}
+
+message GetFreshAddressesRequest {
+  // Account descriptor of the keychain
+  string account_descriptor = 1;
+
+  // The chain on which the fresh addresses must be issued on.
+  Change change = 2;
+
+  // The number of fresh addresses to derive.
+  uint32 batch_size = 3;
+}
+
+message GetFreshAddressesResponse {
+  repeated string addresses = 1;
 }
