@@ -87,6 +87,11 @@ func Test() error {
 	return sh.Run(goexe, "test", "./...")
 }
 
+// Run integration tests
+func Integration() error {
+	return sh.Run(goexe, "test", "--tags=integration", "./...")
+}
+
 // Run tests with race detector
 func TestRace() error {
 	return sh.Run(goexe, "test", "-race", "./...")
