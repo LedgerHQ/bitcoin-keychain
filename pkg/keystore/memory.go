@@ -76,8 +76,8 @@ func (s *InMemoryKeystore) Create(descriptor string, net Network) (KeychainInfo,
 
 	s.db[descriptor] = &Meta{
 		Main:        keychainInfo,
-		Derivations: nil,
-		Addresses:   nil,
+		Derivations: map[DerivationPath]string{},
+		Addresses:   map[string]DerivationPath{},
 	}
 
 	return keychainInfo, nil
@@ -113,11 +113,6 @@ func (s InMemoryKeystore) GetFreshAddresses(
 		return addrs, ErrDescriptorNotFound
 	}
 
-	changeXPub, err := k.ChangeXPub(change)
-	if err != nil {
-		return addrs, err
-	}
-
 	maxConsecutiveIndex, err := k.MaxConsecutiveIndex(change)
 	if err != nil {
 		return addrs, err
@@ -134,8 +129,9 @@ func (s InMemoryKeystore) GetFreshAddresses(
 		// Skip any index that exists in non-consecutive indexes, to prevent
 		// address reuse.
 		if !contains(nonConsecutiveIndexes, index) {
-			addr, err := deriveAddressAtIndex(s.client, changeXPub, index,
-				k.Main.Scheme, k.Main.Network)
+			path := DerivationPath{uint32(change), index}
+
+			addr, err := deriveAddress(s.client, k, path)
 			if err != nil {
 				return addrs, err
 			}
@@ -244,9 +240,9 @@ func (s *InMemoryKeystore) MarkPathAsUsed(descriptor string, path DerivationPath
 	return nil
 }
 
-func (s *InMemoryKeystore) GetAllObservableIndexes(
-	descriptor string, change Change, from uint32, to uint32,
-) ([]uint32, error) {
+func (s *InMemoryKeystore) GetAllObservableAddresses(
+	descriptor string, change Change, fromIndex uint32, toIndex uint32,
+) ([]string, error) {
 	k, ok := s.db[descriptor]
 	if !ok {
 		return nil, ErrDescriptorNotFound
@@ -257,13 +253,52 @@ func (s *InMemoryKeystore) GetAllObservableIndexes(
 		return nil, err
 	}
 
-	length := minUint32(to-from, maxObservableIndex-from)
+	length := minUint32(toIndex-fromIndex, maxObservableIndex-fromIndex)
 
 	var result []uint32
 
 	for i := uint32(0); i <= length; i++ {
-		result = append(result, from+i)
+		result = append(result, fromIndex+i)
 	}
 
-	return result, nil
+	addrs := make([]string, 0, len(result))
+
+	for _, i := range result {
+		addr, err := deriveAddress(s.client, k, DerivationPath{uint32(change), i})
+		if err != nil {
+			return nil, err
+		}
+
+		addrs = append(addrs, addr)
+	}
+
+	return addrs, nil
+}
+
+// GetDerivationPath reads the address-to-derivations mapping in the keystore,
+// and returns the DerivationPath corresponding to the specified address.
+func (s InMemoryKeystore) GetDerivationPath(descriptor string, address string) (DerivationPath, error) {
+	k, ok := s.db[descriptor]
+	if !ok {
+		return DerivationPath{}, ErrDescriptorNotFound
+	}
+
+	path, ok := k.Addresses[address]
+	if !ok {
+		return DerivationPath{}, ErrAddressNotFound
+	}
+
+	return path, nil
+}
+
+// MarkAddressAsUsed is a helper to directly mark an address as used. It
+// internally fetches the derivation path of the address from the keystore,
+// and then marks this DerivationPath value as used.
+func (s *InMemoryKeystore) MarkAddressAsUsed(descriptor string, address string) error {
+	path, err := s.GetDerivationPath(descriptor, address)
+	if err != nil {
+		return err
+	}
+
+	return s.MarkPathAsUsed(descriptor, path)
 }

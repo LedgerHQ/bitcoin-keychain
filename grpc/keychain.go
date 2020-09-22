@@ -47,21 +47,6 @@ func (c Controller) GetKeychainInfo(
 	return KeychainInfo(r), nil
 }
 
-func (c Controller) MarkPathAsUsed(
-	ctx context.Context, request *pb.MarkPathAsUsedRequest,
-) (*emptypb.Empty, error) {
-	path, err := DerivationPath(request.Derivation)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := c.store.MarkPathAsUsed(request.AccountDescriptor, path); err != nil {
-		return nil, err
-	}
-
-	return nil, nil
-}
-
 func (c Controller) GetFreshAddresses(
 	ctx context.Context, request *pb.GetFreshAddressesRequest,
 ) (*pb.GetFreshAddressesResponse, error) {
@@ -77,6 +62,35 @@ func (c Controller) GetFreshAddresses(
 	}
 
 	return &pb.GetFreshAddressesResponse{Addresses: addrs}, nil
+}
+
+func (c Controller) MarkAddressesAsUsed(
+	ctx context.Context, request *pb.MarkAddressesAsUsedRequest,
+) (*emptypb.Empty, error) {
+	for _, addr := range request.Addresses {
+		if err := c.store.MarkAddressAsUsed(request.AccountDescriptor, addr); err != nil {
+			return nil, err
+		}
+	}
+
+	return &emptypb.Empty{}, nil
+}
+
+func (c Controller) GetAllObservableAddresses(
+	ctx context.Context, request *pb.GetAllObservableAddressesRequest,
+) (*pb.GetAllObservableAddressesResponse, error) {
+	change, err := Change(request.Change)
+	if err != nil {
+		return nil, err
+	}
+
+	addrs, err := c.store.GetAllObservableAddresses(
+		request.AccountDescriptor, change, request.FromIndex, request.ToIndex)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.GetAllObservableAddressesResponse{Addresses: addrs}, nil
 }
 
 // NewKeychainController returns a new instance of a Controller struct that

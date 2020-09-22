@@ -22,4 +22,8 @@ var (
 	// ErrDescriptorNotFound indicates an attempt to get a descriptor from a
 	// keystore that has not been registered.
 	ErrDescriptorNotFound = errors.New("descriptor not found")
+
+	// ErrAddressNotFound indicates that an address was not found in the
+	// address-to-derivations mapping in the keystore.
+	ErrAddressNotFound = errors.New("address not found")
 )

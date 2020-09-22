@@ -16,7 +16,10 @@ type Keystore interface {
 	GetFreshAddress(descriptor string, change Change) (string, error)
 	GetFreshAddresses(descriptor string, change Change, size uint32) ([]string, error)
 	MarkPathAsUsed(descriptor string, path DerivationPath) error
-	GetAllObservableIndexes(descriptor string, change Change, from uint32, to uint32) ([]uint32, error)
+	MarkAddressAsUsed(descriptor string, address string) error
+	GetAllObservableAddresses(descriptor string, change Change,
+		fromIndex uint32, toIndex uint32) ([]string, error)
+	GetDerivationPath(descriptor string, address string) (DerivationPath, error)
 }
 
 // Scheme defines the scheme on which a keychain entry is based.
@@ -70,11 +73,6 @@ type KeychainInfo struct {
 	NonConsecutiveInternalIndexes []uint32 `json:"non_consecutive_internal_indexes"` // Used internal indexes that are creating a gap in the derivation
 }
 
-type derivationToPublicKeyMap map[DerivationPath]struct {
-	PublicKey string `json:"public_key"` // Public key at HD tree depth 5
-	Used      bool   `json:"used"`       // Whether any txn history at derivation
-}
-
 // Schema is a map between account descriptors and account information.
 type Schema map[string]*Meta
 
@@ -82,8 +80,8 @@ type Schema map[string]*Meta
 // such as derivations, addresses, etc.
 type Meta struct {
 	Main        KeychainInfo              `json:"main"`
-	Derivations derivationToPublicKeyMap  `json:"derivations"`
-	Addresses   map[string]DerivationPath `json:"addresses"` // derivation path at HD tree depth 5
+	Derivations map[DerivationPath]string `json:"derivations"` // public key at HD tree depth 5
+	Addresses   map[string]DerivationPath `json:"addresses"`   // derivation path at HD tree depth 5
 }
 
 // ChangeXPub returns the XPub of the keychain for the specified Change
@@ -173,6 +171,9 @@ func (m *Meta) SetNonConsecutiveIndexes(change Change, indexes []uint32) error {
 	return nil
 }
 
+// MaxObservableIndex returns the maximum index inclusive of used and unused
+// address indexes, for a given Change. It is therefore the maximum index
+// that is currently observed by the keychain.
 func (m Meta) MaxObservableIndex(change Change) (uint32, error) {
 	switch change {
 	case External:

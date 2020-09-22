@@ -16,11 +16,14 @@ service KeychainService {
   // Get keychain metadata.
   rpc GetKeychainInfo(GetKeychainInfoRequest) returns (KeychainInfo) {}
 
-  // Mark derivation path as used
-  rpc MarkPathAsUsed(MarkPathAsUsedRequest) returns (google.protobuf.Empty) {}
+  // Mark a batch of addresses as used.
+  rpc MarkAddressesAsUsed(MarkAddressesAsUsedRequest) returns (google.protobuf.Empty) {}
 
   // Get fresh addresses for a registered keychain and the provided Change.
   rpc GetFreshAddresses(GetFreshAddressesRequest) returns (GetFreshAddressesResponse) {}
+
+  // Get a list of all address that can be observed by the keychain.
+  rpc GetAllObservableAddresses(GetAllObservableAddressesRequest) returns (GetAllObservableAddressesResponse) {}
 }
 
 // BitcoinNetwork enumerates the list of all supported Bitcoin networks. It
@@ -119,5 +122,31 @@ message GetFreshAddressesRequest {
 }
 
 message GetFreshAddressesResponse {
+  repeated string addresses = 1;
+}
+
+message MarkAddressesAsUsedRequest {
+  // Account descriptor of the keychain
+  string account_descriptor = 1;
+
+  // Addresses to be marked as used
+  repeated string addresses = 2;
+}
+
+message GetAllObservableAddressesRequest {
+  // Account descriptor of the keychain
+  string account_descriptor = 1;
+
+  // The chain on which the observable addresses must be returned
+  Change change = 2;
+
+  // Start address index
+  uint32 from_index = 3;
+
+  // End address index
+  uint32 to_index = 4;
+}
+
+message GetAllObservableAddressesResponse {
   repeated string addresses = 1;
 }

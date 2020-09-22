@@ -109,28 +109,41 @@ func encodeAddress(
 	return addr.Address, nil
 }
 
-// deriveAddressAtIndex is a helper to derive a child from an xPub at the given
-// index, and encode the corresponding public key to an address based on the
-// given Scheme and Network.
-func deriveAddressAtIndex(
+// deriveAddressAtIndex is a helper to derive a child for a registered keychain
+// at the given DerivationPath, and encode the corresponding public key to an
+// address based on the given Scheme and Network.
+func deriveAddress(
 	client bitcoin.CoinServiceClient,
-	xPub string,
-	index uint32,
-	scheme Scheme,
-	net Network,
+	keychain *Meta,
+	path DerivationPath,
 ) (string, error) {
-	child, err := childKDF(client, xPub, index)
+	xPub, err := keychain.ChangeXPub(path.ChangeIndex())
 	if err != nil {
 		return "", errors.Wrapf(err,
-			"failed to derive extended key %s at child index %d", xPub, index)
+			"failed to get xPub for change index %d", path.ChangeIndex())
 	}
 
-	addr, err := encodeAddress(client, child.PublicKey, scheme, net)
+	child, err := childKDF(client, xPub, path.AddressIndex())
+	if err != nil {
+		return "", errors.Wrapf(err,
+			"failed to derive extended key %s at child index %d",
+			xPub, path.AddressIndex())
+	}
+
+	addr, err := encodeAddress(
+		client, child.PublicKey, keychain.Main.Scheme, keychain.Main.Network)
 	if err != nil {
 		return "", errors.Wrapf(err,
 			"failed to encode public key %s to %s address on %s",
-			hex.EncodeToString(child.PublicKey), scheme, net)
+			hex.EncodeToString(child.PublicKey), keychain.Main.Scheme,
+			keychain.Main.Network)
 	}
+
+	// Feed address -> derivation path mapping
+	keychain.Addresses[addr] = path
+
+	// Feed derivation path -> public key mapping
+	keychain.Derivations[path] = hex.EncodeToString(child.PublicKey)
 
 	return addr, nil
 }
