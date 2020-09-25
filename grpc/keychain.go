@@ -22,12 +22,17 @@ func (c Controller) CreateKeychain(
 		return nil, err
 	}
 
-	r, err := c.store.Create(request.AccountDescriptor, net)
+	scheme, err := Scheme(request.Scheme)
 	if err != nil {
 		return nil, err
 	}
 
-	return KeychainInfo(r), nil
+	r, err := c.store.Create(request.ExtendedPublicKey, scheme, net)
+	if err != nil {
+		return nil, err
+	}
+
+	return KeychainInfo(r)
 }
 
 func (c Controller) DeleteKeychain(
@@ -39,24 +44,33 @@ func (c Controller) DeleteKeychain(
 func (c Controller) GetKeychainInfo(
 	ctx context.Context, request *pb.GetKeychainInfoRequest,
 ) (*pb.KeychainInfo, error) {
-	r, err := c.store.Get(request.AccountDescriptor)
+	id, err := KeychainID(request.KeychainId)
 	if err != nil {
 		return nil, err
 	}
 
-	return KeychainInfo(r), nil
+	r, err := c.store.Get(id)
+	if err != nil {
+		return nil, err
+	}
+
+	return KeychainInfo(r)
 }
 
 func (c Controller) GetFreshAddresses(
 	ctx context.Context, request *pb.GetFreshAddressesRequest,
 ) (*pb.GetFreshAddressesResponse, error) {
+	id, err := KeychainID(request.KeychainId)
+	if err != nil {
+		return nil, err
+	}
+
 	change, err := Change(request.Change)
 	if err != nil {
 		return nil, err
 	}
 
-	addrs, err := c.store.GetFreshAddresses(
-		request.AccountDescriptor, change, request.BatchSize)
+	addrs, err := c.store.GetFreshAddresses(id, change, request.BatchSize)
 	if err != nil {
 		return nil, err
 	}
@@ -67,8 +81,13 @@ func (c Controller) GetFreshAddresses(
 func (c Controller) MarkAddressesAsUsed(
 	ctx context.Context, request *pb.MarkAddressesAsUsedRequest,
 ) (*emptypb.Empty, error) {
+	id, err := KeychainID(request.KeychainId)
+	if err != nil {
+		return nil, err
+	}
+
 	for _, addr := range request.Addresses {
-		if err := c.store.MarkAddressAsUsed(request.AccountDescriptor, addr); err != nil {
+		if err := c.store.MarkAddressAsUsed(id, addr); err != nil {
 			return nil, err
 		}
 	}
@@ -79,6 +98,11 @@ func (c Controller) MarkAddressesAsUsed(
 func (c Controller) GetAllObservableAddresses(
 	ctx context.Context, request *pb.GetAllObservableAddressesRequest,
 ) (*pb.GetAllObservableAddressesResponse, error) {
+	id, err := KeychainID(request.KeychainId)
+	if err != nil {
+		return nil, err
+	}
+
 	var changeList []keystore.Change
 	if request.Change == pb.Change_CHANGE_UNSPECIFIED {
 		changeList = []keystore.Change{keystore.External, keystore.Internal}
@@ -104,7 +128,7 @@ func (c Controller) GetAllObservableAddresses(
 
 	for _, change := range changeList {
 		changeAddrs, err := c.store.GetAllObservableAddresses(
-			request.AccountDescriptor, change, request.FromIndex, to)
+			id, change, request.FromIndex, to)
 		if err != nil {
 			return nil, err
 		}

@@ -1,59 +1,27 @@
 package keystore
 
 import (
-	"regexp"
-	"strings"
+	"fmt"
 
 	"github.com/pkg/errors"
 )
 
-// DescriptorTokens models the result of parsing an output descriptor.
-type DescriptorTokens struct {
-	XPub   string
-	Scheme Scheme
-}
-
-// Match the base key using regex, and ignore everything else.
-// FIXME: make the regex match more robust.
-var descriptorRegex = regexp.MustCompile(`.*\((?:\[.*])?([\w+]*).*\).*`)
-
-// ParseDescriptor is a very basic tokenizer of output descriptor strings.
+// MakeDescriptor builds output descriptor strings for a given Change path
+// and Scheme.
 //
 // References:
 //   https://github.com/bitcoin/bitcoin/blob/master/doc/descriptors.md
 //   https://github.com/bitcoin-core/HWI/blob/master/hwilib/descriptor.py
 //   https://github.com/bitcoin/bitcoin/blob/master/src/script/descriptor.cpp
-//
-// TODO: Upstream this to btcsuite/btcutil, and access it through bitcoin-svc.
-func ParseDescriptor(descriptor string) (DescriptorTokens, error) {
-	var scheme Scheme
-
-	switch {
-	case strings.HasPrefix(descriptor, "sh(wpkh("):
-		scheme = BIP49
-	case strings.HasPrefix(descriptor, "wpkh("):
-		scheme = BIP84
-	case strings.HasPrefix(descriptor, "pkh("):
-		scheme = BIP44
+func MakeDescriptor(extendedPublicKey string, change Change, scheme Scheme) (string, error) {
+	switch scheme {
+	case BIP44:
+		return fmt.Sprintf("pkh(%s/%d/*)", extendedPublicKey, change), nil
+	case BIP49:
+		return fmt.Sprintf("sh(wpkh(%s/%d/*))", extendedPublicKey, change), nil
+	case BIP84:
+		return fmt.Sprintf("wpkh(%s/%d/*)", extendedPublicKey, change), nil
 	default:
-		return DescriptorTokens{}, errors.Wrapf(ErrUnrecognizedScheme,
-			"failed to parse descriptor %v", descriptor)
+		return "", errors.Wrapf(ErrUnrecognizedScheme, "%v", scheme)
 	}
-
-	groups := descriptorRegex.FindStringSubmatch(descriptor)
-	if len(groups) != 2 {
-		return DescriptorTokens{}, errors.Wrapf(
-			ErrInvalidDescriptor, "failed to parse descriptor %v", descriptor)
-	}
-
-	xpub := groups[1]
-	if xpub == "" {
-		return DescriptorTokens{}, errors.Wrapf(ErrInvalidDescriptor,
-			"empty xpub in descriptor %v", descriptor)
-	}
-
-	return DescriptorTokens{
-		XPub:   xpub,
-		Scheme: scheme,
-	}, nil
 }

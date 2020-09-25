@@ -9,80 +9,63 @@ import (
 	"github.com/pkg/errors"
 )
 
-func TestParseDescriptor(t *testing.T) {
+func TestMakeDescriptor(t *testing.T) {
 	tests := []struct {
-		name       string
-		descriptor string
-		want       DescriptorTokens
-		wantErr    error
+		name              string
+		extendedPublicKey string
+		scheme            Scheme
+		change            Change
+		want              string
+		wantErr           error
 	}{
 		{
-			name:       "legacy",
-			descriptor: "pkh(deadbeef)",
-			want: DescriptorTokens{
-				XPub:   "deadbeef",
-				Scheme: "BIP44",
-			},
+			name:              "legacy",
+			extendedPublicKey: "deadbeef",
+			scheme:            BIP44,
+			change:            External,
+			want:              "pkh(deadbeef/0/*)",
 		},
 		{
-			name:       "wrapped segwit",
-			descriptor: "sh(wpkh(deadbeef))",
-			want: DescriptorTokens{
-				XPub:   "deadbeef",
-				Scheme: "BIP49",
-			},
+			name:              "wrapped segwit",
+			extendedPublicKey: "deadbeef",
+			scheme:            BIP49,
+			change:            External,
+			want:              "sh(wpkh(deadbeef/0/*))",
 		},
 		{
-			name:       "native segwit",
-			descriptor: "wpkh(deadbeef)",
-			want: DescriptorTokens{
-				XPub:   "deadbeef",
-				Scheme: "BIP84",
-			},
+			name:              "native segwit",
+			extendedPublicKey: "deadbeef",
+			scheme:            BIP84,
+			change:            External,
+			want:              "wpkh(deadbeef/0/*)",
 		},
 		{
-			name:       "verbose wrapped segwit",
-			descriptor: "sh(wpkh([d34db33f/44'/0'/0']deadbeef/1/*))",
-			want: DescriptorTokens{
-				XPub:   "deadbeef",
-				Scheme: "BIP49",
-			},
-		},
-		{
-			name:       "invalid scheme",
-			descriptor: "abcd(deadbeef)",
-			wantErr:    ErrUnrecognizedScheme,
-		},
-		{
-			name:       "invalid descriptor",
-			descriptor: "wpkh(deadbeef",
-			wantErr:    ErrInvalidDescriptor,
-		},
-		{
-			name:       "empty descriptor",
-			descriptor: "wpkh()",
-			wantErr:    ErrInvalidDescriptor,
+			name:              "native segwit",
+			extendedPublicKey: "deadbeef",
+			scheme:            BIP84,
+			change:            Internal,
+			want:              "wpkh(deadbeef/1/*)",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ParseDescriptor(tt.descriptor)
+			got, err := MakeDescriptor(tt.extendedPublicKey, tt.change, tt.scheme)
 			if err != nil && tt.wantErr == nil {
-				t.Fatalf("ParseDescriptor() unexpected error: %v", err)
+				t.Fatalf("MakeDescriptor() unexpected error: %v", err)
 			}
 
 			if err == nil && tt.wantErr != nil {
-				t.Fatalf("ParseDescriptor() got no error, want '%v'",
+				t.Fatalf("MakeDescriptor() got no error, want '%v'",
 					tt.wantErr)
 			}
 
 			if err != nil && tt.wantErr != errors.Cause(err) {
-				t.Fatalf("ParseDescriptor() got error = %v, want = %v",
+				t.Fatalf("MakeDescriptor() got error = %v, want = %v",
 					err, tt.wantErr)
 			}
 
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ParseDescriptor() got = %v, want = %v", got, tt.want)
+				t.Errorf("MakeDescriptor() got = %v, want = %v", got, tt.want)
 			}
 		})
 	}

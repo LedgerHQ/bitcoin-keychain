@@ -7,16 +7,17 @@ option java_package = "co.ledger.protobuf.bitcoin";
 import "google/protobuf/empty.proto";
 
 service KeychainService {
-  // Create a new keychain by descriptor.
+  // Create a new keychain by extended public key.
   rpc CreateKeychain(CreateKeychainRequest) returns (KeychainInfo) {}
 
-  // Delete a keychain by descriptor.
+  // Delete a keychain by UUID.
   rpc DeleteKeychain(DeleteKeychainRequest) returns (google.protobuf.Empty) {}
 
-  // Get keychain metadata.
+  // Get keychain metadata by UUID.
   rpc GetKeychainInfo(GetKeychainInfoRequest) returns (KeychainInfo) {}
 
   // Mark a batch of addresses as used.
+  // NOTE: address being marked as used MUST be observable.
   rpc MarkAddressesAsUsed(MarkAddressesAsUsedRequest) returns (google.protobuf.Empty) {}
 
   // Get fresh addresses for a registered keychain and the provided Change.
@@ -48,59 +49,70 @@ enum Change {
   CHANGE_INTERNAL    = 2;  // internal chain
 }
 
+// Scheme defines the scheme on which a keychain entry is based.
+enum Scheme {
+  SCHEME_UNSPECIFIED = 0;  // fallback value if unrecognized / unspecified
+  SCHEME_BIP44       = 1;  // indicates that the keychain scheme is legacy.
+  SCHEME_BIP49       = 2;  // indicates that the keychain scheme is segwit.
+  SCHEME_BIP84       = 3;  // indicates that the keychain scheme is native segwit.
+}
+
 message CreateKeychainRequest {
-  string account_descriptor = 1;
-  uint32 lookahead_size = 2;
-  BitcoinNetwork network = 3;
+  string extended_public_key = 1;
+  Scheme scheme = 2;
+  uint32 lookahead_size = 3;
+  BitcoinNetwork network = 4;
 }
 
 message DeleteKeychainRequest {
-  string account_descriptor = 1;
+  // UUID representing the keychain
+  bytes keychain_id = 1;
 }
 
 message GetKeychainInfoRequest {
-  string account_descriptor = 1;
+  // UUID representing the keychain
+  bytes keychain_id = 1;
 }
 
 message KeychainInfo {
-  // Account descriptor of the keychain, at HD depth 3. MUST include the key
-  // origin information.
+  // UUID representing the keychain
+  bytes keychain_id = 1;
+
+  // External chain output descriptor of the keychain. It "describes" all
+  // external addresses that belong to the keychain.
   // Ref: https://github.com/bitcoin/bitcoin/blob/master/doc/descriptors.md
-  string account_descriptor = 1;
+  string external_descriptor = 2;
+
+  // Internal chain output descriptor of the keychain. It "describes" all
+  // internal addresses that belong to the keychain.
+  string internal_descriptor = 3;
 
   // Extended public key serialized with standard HD version bytes.
-  string xpub = 2;
+  string extended_public_key = 4;
 
   // Extended public key serialized with SLIP-0132 HD version bytes.
   // Ref: https://github.com/satoshilabs/slips/blob/master/slip-0132.md
-  string slip32_extended_public_key = 3;
+  string slip32_extended_public_key = 5;
 
   // Numerical size of the lookahead zone.
-  uint32 lookahead_size = 4;
+  uint32 lookahead_size = 6;
 
-  // Scheme defines the scheme on which a keychain entry is based.
-  enum Scheme {
-    SCHEME_UNSPECIFIED = 0;  // fallback value if unrecognized / unspecified
-    SCHEME_BIP44       = 1;  // indicates that the keychain scheme is legacy.
-    SCHEME_BIP49       = 2;  // indicates that the keychain scheme is segwit.
-    SCHEME_BIP84       = 3;  // indicates that the keychain scheme is native segwit.
-  }
-  Scheme scheme = 5;
+  Scheme scheme = 7;
 
   // Network for which the keychain is defined.
   //
-  // Although the network information can be inferred from the account
-  // descriptor, it is often not enough to differentiate between Testnet3
-  // and Regtest networks, typically the case with the BIP84 scheme.
+  // Although the network information can be inferred from the extended public
+  // key, it is often not enough to differentiate between Testnet3 and Regtest
+  // networks, typically the case with the BIP84 scheme.
   //
   // This field is mostly useful for encoding addresses for a specific
   // network.
-  BitcoinNetwork network = 6;
+  BitcoinNetwork network = 8;
 }
 
 message MarkPathAsUsedRequest {
-  // Account descriptor of the keychain
-  string account_descriptor = 1;
+  // UUID representing the keychain
+  bytes keychain_id = 1;
 
   // Derivation path relative to BIP-32 account path-level.
   //
@@ -111,8 +123,8 @@ message MarkPathAsUsedRequest {
 }
 
 message GetFreshAddressesRequest {
-  // Account descriptor of the keychain
-  string account_descriptor = 1;
+  // UUID representing the keychain
+  bytes keychain_id = 1;
 
   // The chain on which the fresh addresses must be issued on.
   Change change = 2;
@@ -126,16 +138,16 @@ message GetFreshAddressesResponse {
 }
 
 message MarkAddressesAsUsedRequest {
-  // Account descriptor of the keychain
-  string account_descriptor = 1;
+  // UUID representing the keychain
+  bytes keychain_id = 1;
 
   // Addresses to be marked as used
   repeated string addresses = 2;
 }
 
 message GetAllObservableAddressesRequest {
-  // Account descriptor of the keychain
-  string account_descriptor = 1;
+  // UUID representing the keychain
+  bytes keychain_id = 1;
 
   // The chain on which the observable addresses must be returned.
   // If unspecified (CHANGE_UNSPECIFIED), return addresses observable on both

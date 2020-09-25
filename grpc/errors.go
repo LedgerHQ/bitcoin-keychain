@@ -11,7 +11,15 @@ var (
 	// encountered.
 	ErrUnrecognizedChange = errors.New("unrecognized change")
 
+	// ErrUnrecognizedScheme indicates that an unrecognized derivation Scheme
+	// was encountered.
+	ErrUnrecognizedScheme = errors.New("unrecognized scheme")
+
 	// ErrInvalidDerivationPath indicates that a derivation path is invalid or
 	// malformed.
 	ErrInvalidDerivationPath = errors.New("invalid derivation path")
+
+	// ErrInvalidKeychainID indicates that the UUID representing the keychain
+	// could not be serialized / deserialized.
+	ErrInvalidKeychainID = errors.New("invalid keychain id")
 )

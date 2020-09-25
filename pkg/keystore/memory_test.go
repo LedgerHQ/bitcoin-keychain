@@ -83,24 +83,22 @@ func NewMockInMemoryKeystore() Keystore {
 
 func TestInMemoryKeystore_GetCreate(t *testing.T) {
 	tests := []struct {
-		name       string
-		descriptor string
-		network    Network
-		want       KeychainInfo
-		wantErr    error
+		name        string
+		extendedKey string
+		scheme      Scheme
+		network     Network
+		want        KeychainInfo
+		wantErr     error
 	}{
 		{
-			name:       "invalid descriptor",
-			descriptor: "bad xpub",
-			wantErr:    ErrUnrecognizedScheme,
-		},
-		{
-			name:       "native segwit",
-			descriptor: "wpkh(xpub1111)",
-			network:    Mainnet,
+			name:        "native segwit",
+			extendedKey: "xpub1111",
+			scheme:      BIP84,
+			network:     Mainnet,
 			want: KeychainInfo{
-				Descriptor:                  "wpkh(xpub1111)",
-				XPub:                        "xpub1111",
+				ExternalDescriptor:          "wpkh(xpub1111/0/*)",
+				InternalDescriptor:          "wpkh(xpub1111/1/*)",
+				ExtendedPublicKey:           "xpub1111",
 				SLIP32ExtendedPublicKey:     "xpub1111",
 				ExternalXPub:                "xpub1111->0",
 				MaxConsecutiveExternalIndex: 0,
@@ -116,43 +114,46 @@ func TestInMemoryKeystore_GetCreate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			keystore := NewMockInMemoryKeystore()
 
-			got, err := keystore.Create(tt.descriptor, tt.network)
+			gotInfo, err := keystore.Create(tt.extendedKey, tt.scheme, tt.network)
 			if err != nil && tt.wantErr == nil {
 				t.Fatalf("Create() unexpected error: %v", err)
 			}
 
 			if err == nil && tt.wantErr != nil {
-				t.Fatalf("Create() got no error, want '%v'",
+				t.Fatalf("Create() gotInfo no error, want '%v'",
 					tt.wantErr)
 			}
 
 			if err != nil && errors.Cause(err) != tt.wantErr {
-				t.Fatalf("Create() got error '%v', want '%v'",
+				t.Fatalf("Create() gotInfo error '%v', want '%v'",
 					err, tt.wantErr)
 			}
 
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Fatalf("Create() got = '%v', want = '%v'",
-					got, tt.want)
+			// Do not compare UUIDs, since it random.
+			tt.want.ID = gotInfo.ID
+
+			if !reflect.DeepEqual(gotInfo, tt.want) {
+				t.Fatalf("Create() gotInfo = '%v', want = '%v'",
+					gotInfo, tt.want)
 			}
 
-			gotDB, dbErr := keystore.Get(tt.descriptor)
+			gotDB, dbErr := keystore.Get(gotInfo.ID)
 			if dbErr != nil && err == nil {
 				t.Fatalf("Get() unexpected error: %v", dbErr)
 			}
 
 			if dbErr == nil && err != nil {
-				t.Fatalf("Get() got no error, want '%v'",
-					ErrDescriptorNotFound)
+				t.Fatalf("Get() gotInfo no error, want '%v'",
+					ErrKeychainNotFound)
 			}
 
-			if dbErr != nil && errors.Cause(dbErr) != ErrDescriptorNotFound {
-				t.Fatalf("Get() got error '%v', want '%v'",
-					dbErr, ErrDescriptorNotFound)
+			if dbErr != nil && errors.Cause(dbErr) != ErrKeychainNotFound {
+				t.Fatalf("Get() gotInfo error '%v', want '%v'",
+					dbErr, ErrKeychainNotFound)
 			}
 
 			if !reflect.DeepEqual(gotDB, tt.want) {
-				t.Fatalf("Get() got = '%v', want = '%v'",
+				t.Fatalf("Get() gotInfo = '%v', want = '%v'",
 					gotDB, tt.want)
 			}
 		})
@@ -161,29 +162,32 @@ func TestInMemoryKeystore_GetCreate(t *testing.T) {
 
 func TestInMemoryKeystore_GetFreshAddress(t *testing.T) {
 	tests := []struct {
-		name       string
-		descriptor string
-		change     Change
-		network    Network
-		want       string
-		wantErr    error
+		name        string
+		extendedKey string
+		scheme      Scheme
+		change      Change
+		network     Network
+		want        string
+		wantErr     error
 	}{
 		{
-			name:       "p2pkh mainnet",
-			descriptor: "wpkh(xpub1111)",
-			change:     External,
-			network:    Mainnet,
-			want:       "deadbeef00-BIP84-mainnet",
+			name:        "p2pkh mainnet",
+			extendedKey: "xpub1111",
+			scheme:      BIP84,
+			change:      External,
+			network:     Mainnet,
+			want:        "deadbeef00-BIP84-mainnet",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			keystore := NewMockInMemoryKeystore()
-			if _, err := keystore.Create(tt.descriptor, tt.network); err != nil {
+			info, err := keystore.Create(tt.extendedKey, tt.scheme, tt.network)
+			if err != nil {
 				panic(err)
 			}
 
-			got, err := keystore.GetFreshAddress(tt.descriptor, tt.change)
+			got, err := keystore.GetFreshAddress(info.ID, tt.change)
 			if err != nil && tt.wantErr == nil {
 				t.Fatalf("GetFreshAddress() unexpected error: %v", err)
 			}
@@ -208,28 +212,31 @@ func TestInMemoryKeystore_GetFreshAddress(t *testing.T) {
 
 func TestInMemoryKeystore_GetFreshAddresses(t *testing.T) {
 	tests := []struct {
-		name       string
-		descriptor string
-		change     Change
-		network    Network
-		size       uint32
-		want       []string
-		wantErr    error
+		name        string
+		extendedKey string
+		change      Change
+		scheme      Scheme
+		network     Network
+		size        uint32
+		want        []string
+		wantErr     error
 	}{
 		{
-			name:       "empty",
-			descriptor: "wpkh(xpub1111)",
-			change:     External,
-			network:    Mainnet,
-			size:       0,
-			want:       []string{},
+			name:        "empty",
+			extendedKey: "xpub1111",
+			scheme:      BIP84,
+			change:      External,
+			network:     Mainnet,
+			size:        0,
+			want:        []string{},
 		},
 		{
-			name:       "p2pkh mainnet multi",
-			descriptor: "wpkh(xpub1111)",
-			change:     External,
-			network:    Mainnet,
-			size:       5,
+			name:        "p2pkh mainnet multi",
+			extendedKey: "xpub1111",
+			scheme:      BIP84,
+			change:      External,
+			network:     Mainnet,
+			size:        5,
 			want: []string{
 				"deadbeef00-BIP84-mainnet",
 				"deadbeef01-BIP84-mainnet",
@@ -242,11 +249,12 @@ func TestInMemoryKeystore_GetFreshAddresses(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			keystore := NewMockInMemoryKeystore()
-			if _, err := keystore.Create(tt.descriptor, tt.network); err != nil {
+			info, err := keystore.Create(tt.extendedKey, tt.scheme, tt.network)
+			if err != nil {
 				panic(err)
 			}
 
-			got, err := keystore.GetFreshAddresses(tt.descriptor, tt.change, tt.size)
+			got, err := keystore.GetFreshAddresses(info.ID, tt.change, tt.size)
 			if err != nil && tt.wantErr == nil {
 				t.Fatalf("GetFreshAddresses() unexpected error: %v", err)
 			}
@@ -272,8 +280,8 @@ func TestInMemoryKeystore_GetFreshAddresses(t *testing.T) {
 func TestInMemoryKeystore_MarkPathAsUsed(t *testing.T) {
 	keystore := NewMockInMemoryKeystore()
 
-	descriptor := "wpkh(xpub1111)"
-	if _, err := keystore.Create(descriptor, Mainnet); err != nil {
+	info, err := keystore.Create("xpub1111", BIP84, Mainnet)
+	if err != nil {
 		panic(err)
 	}
 
@@ -389,11 +397,11 @@ func TestInMemoryKeystore_MarkPathAsUsed(t *testing.T) {
 
 	for _, tt := range workflow {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := keystore.MarkPathAsUsed(descriptor, tt.path); err != nil {
+			if err := keystore.MarkPathAsUsed(info.ID, tt.path); err != nil {
 				t.Fatalf("MarkPathAsUsed() unexpected error: %v", err)
 			}
 
-			gotBulk, err := keystore.GetFreshAddresses(descriptor, tt.change, tt.size)
+			gotBulk, err := keystore.GetFreshAddresses(info.ID, tt.change, tt.size)
 			if err != nil {
 				t.Fatalf("GetFreshAddresses() unexpected error: %v", err)
 			}
@@ -403,7 +411,7 @@ func TestInMemoryKeystore_MarkPathAsUsed(t *testing.T) {
 					gotBulk, tt.wantFreshAddresses)
 			}
 
-			got, err := keystore.GetFreshAddress(descriptor, tt.change)
+			got, err := keystore.GetFreshAddress(info.ID, tt.change)
 			if err != nil {
 				t.Fatalf("GetFreshAddress() unexpected error: %v", err)
 			}

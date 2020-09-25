@@ -3,10 +3,6 @@ package keystore
 import "github.com/pkg/errors"
 
 var (
-	// ErrInvalidDescriptor indicates that a descriptor string does not
-	// have the expected structure/format.
-	ErrInvalidDescriptor = errors.New("invalid descriptor")
-
 	// ErrUnrecognizedScheme indicates that the parsed scheme of a descriptor
 	// is invalid or missing.
 	ErrUnrecognizedScheme = errors.New("unrecognized scheme")
@@ -19,9 +15,9 @@ var (
 	// non-standard, and cannot be handled properly.
 	ErrUnrecognizedNetwork = errors.New("unrecognized network")
 
-	// ErrDescriptorNotFound indicates an attempt to get a descriptor from a
+	// ErrKeychainNotFound indicates an attempt to get a keychain by ID from a
 	// keystore that has not been registered.
-	ErrDescriptorNotFound = errors.New("descriptor not found")
+	ErrKeychainNotFound = errors.New("keychain not found")
 
 	// ErrAddressNotFound indicates that an address was not found in the
 	// address-to-derivations mapping in the keystore.

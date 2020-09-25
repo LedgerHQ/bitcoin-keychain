@@ -1,7 +1,10 @@
 package grpc
 
 import (
+	"encoding/hex"
 	"fmt"
+
+	"github.com/google/uuid"
 
 	"github.com/pkg/errors"
 
@@ -11,18 +14,18 @@ import (
 
 // KeychainInfo is an adapter function to convert a keystore.KeychainInfo
 // instance to the corresponding protobuf message format.
-func KeychainInfo(value keystore.KeychainInfo) *pb.KeychainInfo {
-	var scheme pb.KeychainInfo_Scheme
+func KeychainInfo(value keystore.KeychainInfo) (*pb.KeychainInfo, error) {
+	var scheme pb.Scheme
 
 	switch value.Scheme {
 	case keystore.BIP44:
-		scheme = pb.KeychainInfo_SCHEME_BIP44
+		scheme = pb.Scheme_SCHEME_BIP44
 	case keystore.BIP49:
-		scheme = pb.KeychainInfo_SCHEME_BIP49
+		scheme = pb.Scheme_SCHEME_BIP49
 	case keystore.BIP84:
-		scheme = pb.KeychainInfo_SCHEME_BIP84
+		scheme = pb.Scheme_SCHEME_BIP84
 	default:
-		scheme = pb.KeychainInfo_SCHEME_UNSPECIFIED
+		scheme = pb.Scheme_SCHEME_UNSPECIFIED
 	}
 
 	var network pb.BitcoinNetwork
@@ -38,14 +41,22 @@ func KeychainInfo(value keystore.KeychainInfo) *pb.KeychainInfo {
 		network = pb.BitcoinNetwork_BITCOIN_NETWORK_UNSPECIFIED
 	}
 
+	id, err := value.ID.MarshalBinary()
+	if err != nil {
+		return nil, errors.Wrap(
+			ErrInvalidKeychainID, fmt.Sprintf("%v", value.ID))
+	}
+
 	return &pb.KeychainInfo{
-		AccountDescriptor:       value.Descriptor,
-		Xpub:                    value.XPub,
+		KeychainId:              id,
+		ExternalDescriptor:      value.ExternalDescriptor,
+		InternalDescriptor:      value.InternalDescriptor,
+		ExtendedPublicKey:       value.ExtendedPublicKey,
 		Slip32ExtendedPublicKey: value.SLIP32ExtendedPublicKey,
 		LookaheadSize:           value.LookaheadSize,
 		Scheme:                  scheme,
 		Network:                 network,
-	}
+	}, nil
 }
 
 // Network is an adapter function to convert a gRPC pb.BitcoinNetwork
@@ -84,5 +95,32 @@ func Change(change pb.Change) (keystore.Change, error) {
 		return keystore.Internal, nil
 	default:
 		return -1, errors.Wrap(ErrUnrecognizedChange, fmt.Sprint(change))
+	}
+}
+
+// KeychainID is an adapter function to convert raw bytes to a uuid.UUID
+// instance.
+func KeychainID(id []byte) (uuid.UUID, error) {
+	keychainID, err := uuid.FromBytes(id)
+	if err != nil {
+		return [16]byte{}, errors.Wrap(
+			ErrInvalidKeychainID, hex.EncodeToString(id))
+	}
+
+	return keychainID, nil
+}
+
+// Scheme is an adapter function to convert pb.Scheme to a keystore.Scheme
+// instance.
+func Scheme(scheme pb.Scheme) (keystore.Scheme, error) {
+	switch scheme {
+	case pb.Scheme_SCHEME_BIP44:
+		return keystore.BIP44, nil
+	case pb.Scheme_SCHEME_BIP49:
+		return keystore.BIP49, nil
+	case pb.Scheme_SCHEME_BIP84:
+		return keystore.BIP84, nil
+	default:
+		return "", ErrUnrecognizedScheme
 	}
 }

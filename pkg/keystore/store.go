@@ -3,6 +3,7 @@ package keystore
 import (
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 )
 
@@ -11,15 +12,15 @@ import (
 //   InMemoryKeystore: useful for unit-tests
 //   RedisKeystore:    TBA
 type Keystore interface {
-	Get(descriptor string) (KeychainInfo, error)
-	Create(descriptor string, net Network) (KeychainInfo, error)
-	GetFreshAddress(descriptor string, change Change) (string, error)
-	GetFreshAddresses(descriptor string, change Change, size uint32) ([]string, error)
-	MarkPathAsUsed(descriptor string, path DerivationPath) error
-	MarkAddressAsUsed(descriptor string, address string) error
-	GetAllObservableAddresses(descriptor string, change Change,
+	Get(id uuid.UUID) (KeychainInfo, error)
+	Create(extendedPublicKey string, scheme Scheme, net Network) (KeychainInfo, error)
+	GetFreshAddress(id uuid.UUID, change Change) (string, error)
+	GetFreshAddresses(id uuid.UUID, change Change, size uint32) ([]string, error)
+	MarkPathAsUsed(id uuid.UUID, path DerivationPath) error
+	MarkAddressAsUsed(id uuid.UUID, address string) error
+	GetAllObservableAddresses(id uuid.UUID, change Change,
 		fromIndex uint32, toIndex uint32) ([]string, error)
-	GetDerivationPath(descriptor string, address string) (DerivationPath, error)
+	GetDerivationPath(id uuid.UUID, address string) (DerivationPath, error)
 }
 
 // Scheme defines the scheme on which a keychain entry is based.
@@ -59,24 +60,26 @@ const lookaheadSize = 20
 // Rather than using the associated gRPC message struct, it is defined here
 // independently to avoid having gRPC dependency in this package.
 type KeychainInfo struct {
-	Descriptor                    string   `json:"descriptor"`
-	XPub                          string   `json:"xpub"`                             // Extended public key serialized with standard HD version bytes
-	SLIP32ExtendedPublicKey       string   `json:"slip32_extended_public_key"`       // Extended public key serialized with SLIP-0132 HD version bytes
-	ExternalXPub                  string   `json:"external_xpub"`                    // External chain extended public key at HD tree depth 4
-	MaxConsecutiveExternalIndex   uint32   `json:"max_consecutive_external_index"`   // Max consecutive index (without any gap) on the external chain
-	InternalXPub                  string   `json:"internal_xpub"`                    // Internal chain extended public key at HD tree depth 4
-	MaxConsecutiveInternalIndex   uint32   `json:"max_consecutive_internal_index"`   // Max consecutive index (without any gap) on the internal chain
-	LookaheadSize                 uint32   `json:"lookahead_size"`                   // Numerical size of the lookahead zone
-	Scheme                        Scheme   `json:"scheme"`                           // String identifier for keychain scheme
-	Network                       Network  `json:"network"`                          // String denoting the network to use for encoding addresses
-	NonConsecutiveExternalIndexes []uint32 `json:"non_consecutive_external_indexes"` // Used external indexes that are creating a gap in the derivation
-	NonConsecutiveInternalIndexes []uint32 `json:"non_consecutive_internal_indexes"` // Used internal indexes that are creating a gap in the derivation
+	ID                            uuid.UUID `json:"id"`                               // Keychain ID as a uuid.UUID type
+	ExternalDescriptor            string    `json:"external_descriptor"`              // External chain output descriptor
+	InternalDescriptor            string    `json:"internal_descriptor"`              // Internal chain output descriptor
+	ExtendedPublicKey             string    `json:"extended_public_key"`              // Extended public key serialized with standard HD version bytes
+	SLIP32ExtendedPublicKey       string    `json:"slip32_extended_public_key"`       // Extended public key serialized with SLIP-0132 HD version bytes
+	ExternalXPub                  string    `json:"external_xpub"`                    // External chain extended public key at HD tree depth 4
+	MaxConsecutiveExternalIndex   uint32    `json:"max_consecutive_external_index"`   // Max consecutive index (without any gap) on the external chain
+	InternalXPub                  string    `json:"internal_xpub"`                    // Internal chain extended public key at HD tree depth 4
+	MaxConsecutiveInternalIndex   uint32    `json:"max_consecutive_internal_index"`   // Max consecutive index (without any gap) on the internal chain
+	LookaheadSize                 uint32    `json:"lookahead_size"`                   // Numerical size of the lookahead zone
+	Scheme                        Scheme    `json:"scheme"`                           // String identifier for keychain scheme
+	Network                       Network   `json:"network"`                          // String denoting the network to use for encoding addresses
+	NonConsecutiveExternalIndexes []uint32  `json:"non_consecutive_external_indexes"` // Used external indexes that are creating a gap in the derivation
+	NonConsecutiveInternalIndexes []uint32  `json:"non_consecutive_internal_indexes"` // Used internal indexes that are creating a gap in the derivation
 }
 
-// Schema is a map between account descriptors and account information.
-type Schema map[string]*Meta
+// Schema is a map between keychain ID and the keystore information.
+type Schema map[uuid.UUID]*Meta
 
-// Meta is a struct containing account details corresponding to a descriptor,
+// Meta is a struct containing account details corresponding to a keychain ID,
 // such as derivations, addresses, etc.
 type Meta struct {
 	Main        KeychainInfo              `json:"main"`
@@ -84,7 +87,7 @@ type Meta struct {
 	Addresses   map[string]DerivationPath `json:"addresses"`   // derivation path at HD tree depth 5
 }
 
-// ChangeXPub returns the XPub of the keychain for the specified Change
+// ChangeXPub returns the ExtendedPublicKey of the keychain for the specified Change
 // (Internal or External).
 func (m Meta) ChangeXPub(change Change) (string, error) {
 	switch change {

@@ -66,56 +66,59 @@ func TestKeychainRegistration(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := client.CreateKeychain(ctx, &pb.CreateKeychainRequest{
-				AccountDescriptor: tt.fixture.Descriptor,
+			info, err := client.CreateKeychain(ctx, &pb.CreateKeychainRequest{
+				ExtendedPublicKey: tt.fixture.ExtendedPublicKey,
 				LookaheadSize:     20,
 				Network:           tt.fixture.Network,
+				Scheme:            tt.fixture.Scheme,
 			})
 			if err != nil {
 				t.Fatalf("failed to create keychain - error = %v", err)
 			}
 
 			wantKeychainInfo := &pb.KeychainInfo{
-				AccountDescriptor:       tt.fixture.Descriptor,
-				Xpub:                    tt.fixture.XPub,
-				Slip32ExtendedPublicKey: tt.fixture.XPub,
+				KeychainId:              info.KeychainId,
+				InternalDescriptor:      tt.fixture.InternalDescriptor,
+				ExternalDescriptor:      tt.fixture.ExternalDescriptor,
+				ExtendedPublicKey:       tt.fixture.ExtendedPublicKey,
+				Slip32ExtendedPublicKey: tt.fixture.ExtendedPublicKey,
 				LookaheadSize:           20,
 				Scheme:                  tt.fixture.Scheme,
 				Network:                 tt.fixture.Network,
 			}
 
-			if !proto.Equal(got, wantKeychainInfo) {
-				t.Fatalf("CreateKeychain() got = '%v', want = '%v'",
-					got, wantKeychainInfo)
+			if !proto.Equal(info, wantKeychainInfo) {
+				t.Fatalf("CreateKeychain() info = '%v', want = '%v'",
+					info, wantKeychainInfo)
 			}
 
 			gotExtAddr, err := client.GetFreshAddresses(
 				ctx, &pb.GetFreshAddressesRequest{
-					AccountDescriptor: tt.fixture.Descriptor,
-					Change:            pb.Change_CHANGE_EXTERNAL,
-					BatchSize:         1,
+					KeychainId: info.KeychainId,
+					Change:     pb.Change_CHANGE_EXTERNAL,
+					BatchSize:  1,
 				})
 			if err != nil {
 				t.Fatalf("failed to get fresh external addr - error = %v", err)
 			}
 
 			if !proto.Equal(gotExtAddr, tt.externalAddress) {
-				t.Fatalf("GetFreshAddresses() got = '%v', want = '%v'",
+				t.Fatalf("GetFreshAddresses() info = '%v', want = '%v'",
 					gotExtAddr.Addresses, tt.externalAddress.Addresses)
 			}
 
 			gotIntAddr, err := client.GetFreshAddresses(
 				ctx, &pb.GetFreshAddressesRequest{
-					AccountDescriptor: tt.fixture.Descriptor,
-					Change:            pb.Change_CHANGE_INTERNAL,
-					BatchSize:         1,
+					KeychainId: info.KeychainId,
+					Change:     pb.Change_CHANGE_INTERNAL,
+					BatchSize:  1,
 				})
 			if err != nil {
 				t.Fatalf("failed to get fresh internal addr - error = %v", err)
 			}
 
 			if !proto.Equal(gotIntAddr, tt.internalAddress) {
-				t.Fatalf("GetFreshAddresses() got = '%v', want = '%v'",
+				t.Fatalf("GetFreshAddresses() info = '%v', want = '%v'",
 					gotIntAddr.Addresses, tt.internalAddress.Addresses)
 			}
 		})
