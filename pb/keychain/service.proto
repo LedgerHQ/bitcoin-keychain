@@ -137,7 +137,9 @@ message GetAllObservableAddressesRequest {
   // Account descriptor of the keychain
   string account_descriptor = 1;
 
-  // The chain on which the observable addresses must be returned
+  // The chain on which the observable addresses must be returned.
+  // If unspecified (CHANGE_UNSPECIFIED), return addresses observable on both
+  // internal and external chains.
   Change change = 2;
 
   // Start address index

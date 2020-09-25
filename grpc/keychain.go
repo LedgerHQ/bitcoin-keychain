@@ -79,9 +79,16 @@ func (c Controller) MarkAddressesAsUsed(
 func (c Controller) GetAllObservableAddresses(
 	ctx context.Context, request *pb.GetAllObservableAddressesRequest,
 ) (*pb.GetAllObservableAddressesResponse, error) {
-	change, err := Change(request.Change)
-	if err != nil {
-		return nil, err
+	var changeList []keystore.Change
+	if request.Change == pb.Change_CHANGE_UNSPECIFIED {
+		changeList = []keystore.Change{keystore.External, keystore.Internal}
+	} else {
+		change, err := Change(request.Change)
+		if err != nil {
+			return nil, err
+		}
+
+		changeList = []keystore.Change{change}
 	}
 
 	// If the toIndex field is left out in the request payload, we substitute
@@ -93,10 +100,15 @@ func (c Controller) GetAllObservableAddresses(
 		to = request.ToIndex
 	}
 
-	addrs, err := c.store.GetAllObservableAddresses(
-		request.AccountDescriptor, change, request.FromIndex, to)
-	if err != nil {
-		return nil, err
+	var addrs []string
+	for _, change := range changeList {
+		changeAddrs, err := c.store.GetAllObservableAddresses(
+			request.AccountDescriptor, change, request.FromIndex, to)
+		if err != nil {
+			return nil, err
+		}
+
+		addrs = append(addrs, changeAddrs...)
 	}
 
 	return &pb.GetAllObservableAddressesResponse{Addresses: addrs}, nil
