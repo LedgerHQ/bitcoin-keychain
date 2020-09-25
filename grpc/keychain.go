@@ -101,6 +101,7 @@ func (c Controller) GetAllObservableAddresses(
 	}
 
 	var addrs []string
+
 	for _, change := range changeList {
 		changeAddrs, err := c.store.GetAllObservableAddresses(
 			request.AccountDescriptor, change, request.FromIndex, to)

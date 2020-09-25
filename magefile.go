@@ -120,7 +120,6 @@ func Lint() error {
 		"-E=maligned",
 		"-E=depguard",
 		"-E=misspell",
-		"-E=prealloc",
 		"-E=whitespace",
 		"-E=wsl",
 		"-E=gocritic",
