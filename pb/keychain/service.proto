@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package pb.keychain;
 option go_package = ".;keychain";
-option java_package = "co.ledger.protobuf";
+option java_package = "co.ledger.protobuf.bitcoin";
 
 import "google/protobuf/empty.proto";
 
