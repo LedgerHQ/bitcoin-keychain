@@ -143,7 +143,8 @@ message GetAllObservableAddressesRequest {
   // Start address index
   uint32 from_index = 3;
 
-  // End address index
+  // End address index. If left unspecified, the maximum observable index
+  // will be used as the ending address index.
   uint32 to_index = 4;
 }
 

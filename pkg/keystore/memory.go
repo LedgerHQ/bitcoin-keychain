@@ -253,7 +253,7 @@ func (s *InMemoryKeystore) GetAllObservableAddresses(
 		return nil, err
 	}
 
-	length := minUint32(toIndex-fromIndex, maxObservableIndex-fromIndex)
+	length := minUint32(toIndex, maxObservableIndex) - fromIndex
 
 	var result []uint32
 

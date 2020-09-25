@@ -84,8 +84,17 @@ func (c Controller) GetAllObservableAddresses(
 		return nil, err
 	}
 
+	// If the toIndex field is left out in the request payload, we substitute
+	// it with a large value so that the max observable range is used instead.
+	var to uint32
+	if request.GetToIndex() == 0 {
+		to = (1 << 31) - 1 // uint32 max
+	} else {
+		to = request.ToIndex
+	}
+
 	addrs, err := c.store.GetAllObservableAddresses(
-		request.AccountDescriptor, change, request.FromIndex, request.ToIndex)
+		request.AccountDescriptor, change, request.FromIndex, to)
 	if err != nil {
 		return nil, err
 	}
