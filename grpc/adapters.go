@@ -124,3 +124,24 @@ func Scheme(scheme pb.Scheme) (keystore.Scheme, error) {
 		return "", ErrUnrecognizedScheme
 	}
 }
+
+// AddressInfoProto is an adapter function to convert a keystore.AddressInfo
+// to a pb.AddressInfo object.
+func AddressInfoProto(info keystore.AddressInfo) (*pb.AddressInfo, error) {
+	var change pb.Change
+
+	switch info.Change {
+	case keystore.External:
+		change = pb.Change_CHANGE_EXTERNAL
+	case keystore.Internal:
+		change = pb.Change_CHANGE_INTERNAL
+	default:
+		return nil, errors.Wrap(ErrUnrecognizedChange, fmt.Sprint(change))
+	}
+
+	return &pb.AddressInfo{
+		Address:    info.Address,
+		Derivation: info.Derivation.ToSlice(),
+		Change:     change,
+	}, nil
+}

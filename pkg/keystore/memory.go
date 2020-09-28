@@ -256,7 +256,7 @@ func (s *InMemoryKeystore) MarkPathAsUsed(id uuid.UUID, path DerivationPath) err
 
 func (s *InMemoryKeystore) GetAllObservableAddresses(
 	id uuid.UUID, change Change, fromIndex uint32, toIndex uint32,
-) ([]string, error) {
+) ([]AddressInfo, error) {
 	k, ok := s.db[id]
 	if !ok {
 		return nil, ErrKeychainNotFound
@@ -275,15 +275,23 @@ func (s *InMemoryKeystore) GetAllObservableAddresses(
 		result = append(result, fromIndex+i)
 	}
 
-	addrs := make([]string, 0, len(result))
+	addrs := make([]AddressInfo, 0, len(result))
 
 	for _, i := range result {
-		addr, err := deriveAddress(s.client, k, DerivationPath{uint32(change), i})
+		path := DerivationPath{uint32(change), i}
+
+		addr, err := deriveAddress(s.client, k, path)
 		if err != nil {
 			return nil, err
 		}
 
-		addrs = append(addrs, addr)
+		addrInfo := AddressInfo{
+			Address:    addr,
+			Derivation: path,
+			Change:     change,
+		}
+
+		addrs = append(addrs, addrInfo)
 	}
 
 	return addrs, nil

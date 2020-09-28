@@ -19,7 +19,7 @@ type Keystore interface {
 	MarkPathAsUsed(id uuid.UUID, path DerivationPath) error
 	MarkAddressAsUsed(id uuid.UUID, address string) error
 	GetAllObservableAddresses(id uuid.UUID, change Change,
-		fromIndex uint32, toIndex uint32) ([]string, error)
+		fromIndex uint32, toIndex uint32) ([]AddressInfo, error)
 	GetDerivationPath(id uuid.UUID, address string) (DerivationPath, error)
 }
 
@@ -85,6 +85,14 @@ type Meta struct {
 	Main        KeychainInfo              `json:"main"`
 	Derivations map[DerivationPath]string `json:"derivations"` // public key at HD tree depth 5
 	Addresses   map[string]DerivationPath `json:"addresses"`   // derivation path at HD tree depth 5
+}
+
+// AddressInfo encapsulates an address along with useful information associated
+// to the address.
+type AddressInfo struct {
+	Address    string
+	Derivation DerivationPath
+	Change     Change
 }
 
 // ChangeXPub returns the ExtendedPublicKey of the keychain for the specified Change

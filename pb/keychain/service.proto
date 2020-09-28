@@ -57,6 +57,12 @@ enum Scheme {
   SCHEME_BIP84       = 3;  // indicates that the keychain scheme is native segwit.
 }
 
+message AddressInfo {
+  string address = 1;
+  repeated uint32 derivation = 2;
+  Change change = 3;
+}
+
 message CreateKeychainRequest {
   string extended_public_key = 1;
   Scheme scheme = 2;
@@ -163,5 +169,5 @@ message GetAllObservableAddressesRequest {
 }
 
 message GetAllObservableAddressesResponse {
-  repeated string addresses = 1;
+  repeated AddressInfo addresses = 1;
 }

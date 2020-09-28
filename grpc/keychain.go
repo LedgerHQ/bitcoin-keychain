@@ -124,7 +124,7 @@ func (c Controller) GetAllObservableAddresses(
 		to = request.ToIndex
 	}
 
-	var addrs []string
+	var addrs []keystore.AddressInfo
 
 	for _, change := range changeList {
 		changeAddrs, err := c.store.GetAllObservableAddresses(
@@ -136,7 +136,18 @@ func (c Controller) GetAllObservableAddresses(
 		addrs = append(addrs, changeAddrs...)
 	}
 
-	return &pb.GetAllObservableAddressesResponse{Addresses: addrs}, nil
+	var addrInfoList []*pb.AddressInfo
+
+	for _, addrInfo := range addrs {
+		addrInfo, err := AddressInfoProto(addrInfo)
+		if err != nil {
+			return nil, err
+		}
+
+		addrInfoList = append(addrInfoList, addrInfo)
+	}
+
+	return &pb.GetAllObservableAddressesResponse{Addresses: addrInfoList}, nil
 }
 
 // NewKeychainController returns a new instance of a Controller struct that

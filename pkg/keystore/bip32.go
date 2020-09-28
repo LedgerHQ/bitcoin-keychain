@@ -36,6 +36,12 @@ func (path DerivationPath) AddressIndex() uint32 {
 	return path[1]
 }
 
+// ToSlice returns the raw derivation path as a uint32 slice. The derivation
+// is relative to the BIP-32 account-level.
+func (path DerivationPath) ToSlice() []uint32 {
+	return []uint32{path[0], path[1]}
+}
+
 // Change is an enum type to indicate whether an address belongs to the
 // external chain (receive) or the internal chain (change).
 //
