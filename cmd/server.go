@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net"
 
+	"google.golang.org/grpc/reflection"
+
 	controllers "github.com/ledgerhq/bitcoin-keychain-svc/grpc"
 	"github.com/ledgerhq/bitcoin-keychain-svc/log"
 	pb "github.com/ledgerhq/bitcoin-keychain-svc/pb/keychain"
@@ -21,6 +23,8 @@ func serve() {
 	s := grpc.NewServer()
 	keychainController := controllers.NewKeychainController()
 	pb.RegisterKeychainServiceServer(s, keychainController)
+
+	reflection.Register(s)
 
 	if err := s.Serve(conn); err != nil {
 		log.Fatalf("Failed to serve: %v", err)
