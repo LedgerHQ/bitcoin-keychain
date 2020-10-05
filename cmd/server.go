@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/ledgerhq/bitcoin-keychain-svc/config"
 	"google.golang.org/grpc/reflection"
 
 	controllers "github.com/ledgerhq/bitcoin-keychain-svc/grpc"
@@ -12,9 +13,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-func serve() {
-	addr := fmt.Sprintf(":%d", 50052)
-
+func serve(addr string) {
 	conn, err := net.Listen("tcp", addr)
 	if err != nil {
 		log.Fatalf("Cannot listen to address %s", addr)
@@ -32,5 +31,20 @@ func serve() {
 }
 
 func main() {
-	serve()
+	configProvider := config.LoadProvider("bitcoin_keychain")
+
+	var (
+		host string
+		port int32 = 50052
+	)
+
+	host = configProvider.GetString("host")
+
+	if val := configProvider.GetInt32("port"); val != 0 {
+		port = val
+	}
+
+	addr := fmt.Sprintf("%s:%d", host, port)
+
+	serve(addr)
 }
