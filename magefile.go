@@ -110,7 +110,6 @@ func Lint() error {
 	linterArgs := []string{
 		"run",
 		"-E=golint",
-		"-E=gosec",
 		"-E=interfacer",
 		"-E=unconvert",
 		"-E=dupl",
@@ -121,7 +120,6 @@ func Lint() error {
 		"-E=depguard",
 		"-E=misspell",
 		"-E=whitespace",
-		"-E=wsl",
 		"-E=gocritic",
 	}
 

@@ -1,8 +1,11 @@
 package main
 
 import (
+	"crypto/tls"
 	"fmt"
 	"net"
+
+	"github.com/go-redis/redis/v8"
 
 	"github.com/ledgerhq/bitcoin-keychain/config"
 	controllers "github.com/ledgerhq/bitcoin-keychain/grpc"
@@ -12,16 +15,23 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
-func serve(addr string) {
-	conn, err := net.Listen("tcp", addr)
+func serve(grpcAddr string, redisOpts *redis.Options) {
+	conn, err := net.Listen("tcp", grpcAddr)
 	if err != nil {
 		log.WithFields(log.Fields{
-			"addr": addr,
+			"addr": grpcAddr,
 		}).Fatal("cannot listen to address")
 	}
 
 	s := grpc.NewServer()
-	keychainController := controllers.NewKeychainController()
+
+	keychainController, err := controllers.NewKeychainController(redisOpts)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"error": err,
+		}).Fatal("failed to init controller")
+	}
+
 	pb.RegisterKeychainServiceServer(s, keychainController)
 
 	reflection.Register(s)
@@ -34,11 +44,16 @@ func serve(addr string) {
 }
 
 func main() {
-	configProvider := config.LoadProvider("bitcoin_keychain")
+	configProvider := config.LoadProvider("")
 
 	var (
-		host string
-		port int32 = 50052
+		host          string
+		port          int32 = 50052
+		redisHost     string
+		redisPort     int32 = 6379
+		redisDB       int   = 0
+		redisPassword string
+		tlsConfig     *tls.Config
 	)
 
 	host = configProvider.GetString("host")
@@ -47,7 +62,32 @@ func main() {
 		port = val
 	}
 
-	addr := fmt.Sprintf("%s:%d", host, port)
+	grpcAddr := fmt.Sprintf("%s:%d", host, port)
 
-	serve(addr)
+	redisHost = configProvider.GetString("redis_host")
+
+	if val := configProvider.GetInt32("redis_port"); val != 0 {
+		redisPort = val
+	}
+
+	if val := configProvider.GetInt("redis_db"); val != 0 {
+		redisDB = val
+	}
+
+	redisPassword = configProvider.GetString("redis_password")
+
+	redisAddr := fmt.Sprintf("%s:%d", redisHost, redisPort)
+
+	if configProvider.GetBool("redis_ssl") {
+		tlsConfig = &tls.Config{
+			InsecureSkipVerify: true,
+		}
+	}
+
+	serve(grpcAddr, &redis.Options{
+		Addr:      redisAddr,
+		Password:  redisPassword, // set password
+		DB:        redisDB,       // use default DB
+		TLSConfig: tlsConfig,
+	})
 }

@@ -38,6 +38,9 @@ jobs:
           ./lbs &
           popd
 
+      - name: Start Redis
+        uses: supercharge/redis-github-action@1.1.0
+
       - name: Build
         run: |
           mage -v build

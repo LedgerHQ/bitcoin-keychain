@@ -2,6 +2,9 @@ package grpc
 
 import (
 	"context"
+	"fmt"
+
+	"github.com/go-redis/redis/v8"
 
 	"github.com/ledgerhq/bitcoin-keychain/log"
 
@@ -12,9 +15,9 @@ import (
 
 // Controller is a type that implements the pb.KeychainServiceServer
 // interface.
-type Controller struct {
-	store keystore.Keystore
-}
+type Controller struct{}
+
+var store *keystore.RedisKeystore
 
 func (c Controller) CreateKeychain(
 	ctx context.Context, request *pb.CreateKeychainRequest,
@@ -34,7 +37,7 @@ func (c Controller) CreateKeychain(
 		lookaheadSize = s
 	}
 
-	r, err := c.store.Create(
+	r, err := store.Create(
 		request.ExtendedPublicKey, scheme, net, lookaheadSize)
 	if err != nil {
 		return nil, err
@@ -51,7 +54,7 @@ func (c Controller) DeleteKeychain(
 		return nil, err
 	}
 
-	return &emptypb.Empty{}, c.store.Delete(id)
+	return &emptypb.Empty{}, store.Delete(id)
 }
 
 func (c Controller) GetKeychainInfo(
@@ -62,7 +65,7 @@ func (c Controller) GetKeychainInfo(
 		return nil, err
 	}
 
-	r, err := c.store.Get(id)
+	r, err := store.Get(id)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +86,7 @@ func (c Controller) GetFreshAddresses(
 		return nil, err
 	}
 
-	addrs, err := c.store.GetFreshAddresses(id, change, request.BatchSize)
+	addrs, err := store.GetFreshAddresses(id, change, request.BatchSize)
 	if err != nil {
 		return nil, err
 	}
@@ -96,14 +99,30 @@ func (c Controller) MarkAddressesAsUsed(
 ) (*emptypb.Empty, error) {
 	id, err := KeychainID(request.KeychainId)
 	if err != nil {
+		log.WithFields(log.Fields{
+			"id":    request.KeychainId,
+			"error": err,
+		}).Error("[grpc] MarkAddressesAsUsed: invalid KeychainID")
+
 		return nil, err
 	}
 
 	for _, addr := range request.Addresses {
-		if err := c.store.MarkAddressAsUsed(id, addr); err != nil {
+		if err := store.MarkAddressAsUsed(id, addr); err != nil {
+			log.WithFields(log.Fields{
+				"id":    id.String(),
+				"addr":  addr,
+				"error": err,
+			}).Error("[grpc] MarkAddressesAsUsed: failed")
+
 			return nil, err
 		}
 	}
+
+	log.WithFields(log.Fields{
+		"id":    id.String(),
+		"addrs": request.Addresses,
+	}).Info("[grpc] MarkAddressesAsUsed: successful")
 
 	return &emptypb.Empty{}, nil
 }
@@ -157,7 +176,7 @@ func (c Controller) GetAllObservableAddresses(
 			"range":  []uint32{request.FromIndex, to},
 		}).Info("[grpc] GetAllObservableAddresses: get from keystore")
 
-		changeAddrs, err := c.store.GetAllObservableAddresses(
+		changeAddrs, err := store.GetAllObservableAddresses(
 			id, change, request.FromIndex, to)
 		if err != nil {
 			log.WithFields(log.Fields{
@@ -200,8 +219,13 @@ func (c Controller) GetAllObservableAddresses(
 
 // NewKeychainController returns a new instance of a Controller struct that
 // implements the pb.KeychainServiceServer interface.
-func NewKeychainController() *Controller {
-	return &Controller{
-		store: keystore.NewInMemoryKeystore(),
+func NewKeychainController(redisOpts *redis.Options) (*Controller, error) {
+	var err error
+
+	store, err = keystore.NewRedisKeystore(redisOpts)
+	if err != nil {
+		return nil, fmt.Errorf("Creating redis client failed: %w", err)
 	}
+
+	return &Controller{}, nil
 }

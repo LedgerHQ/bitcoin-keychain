@@ -2,6 +2,7 @@ package keystore
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/ledgerhq/bitcoin-keychain/pb/bitcoin"
 )
@@ -19,6 +20,11 @@ import (
 // For example, if the full derivation path is m/44'/0'/0'/1/2, the
 // representation in DerivationPath would be DerivationPath{1, 2}.
 type DerivationPath [2]uint32
+
+func (path DerivationPath) MarshalText() (text []byte, err error) {
+	p := fmt.Sprintf("%d/%d", path.ChangeIndex(), path.AddressIndex())
+	return []byte(p), nil
+}
 
 // ChangeIndex returns the change index at BIP32 path-level 4, from a given
 // DerivationPath.

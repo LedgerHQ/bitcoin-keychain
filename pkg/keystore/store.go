@@ -1,7 +1,10 @@
 package keystore
 
 import (
+	"encoding/json"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
@@ -89,6 +92,113 @@ type Meta struct {
 	Main        KeychainInfo              `json:"main"`
 	Derivations map[DerivationPath]string `json:"derivations"` // public key at HD tree depth 5
 	Addresses   map[string]DerivationPath `json:"addresses"`   // derivation path at HD tree depth 5
+}
+
+func (m *Meta) MarshalJSON() ([]byte, error) {
+	// Step 1: Create type aliases of the original struct, including the
+	// embedded one.
+
+	type Alias Meta
+
+	type KeychainInfoAlias KeychainInfo
+
+	// Step 2: Create an anonymous struct with raw replacements for the special
+	// fields.
+	aux := &struct {
+		Main struct {
+			ID string `json:"id"`
+			*KeychainInfoAlias
+		} `json:"main"`
+		*Alias
+	}{
+		Alias: (*Alias)(m),
+	}
+
+	aux.Main.ID = m.Main.ID.String()
+
+	// Step 3: Unmarshal the data into the anonymous struct.
+	return json.Marshal(aux)
+}
+
+func (m *Meta) UnmarshalJSON(data []byte) error {
+	// Step 1: Create type aliases of the original struct, including the
+	// embedded one.
+
+	type Alias Meta
+
+	type KeychainInfoAlias KeychainInfo
+
+	// Step 2: Create an anonymous struct with raw replacements for the special
+	// fields.
+	aux := &struct {
+		Derivations map[string]string `json:"derivations"`
+		Addresses   map[string]string `json:"addresses"`
+		Main        struct {
+			ID string `json:"id"`
+			*KeychainInfoAlias
+		} `json:"main"`
+		*Alias
+	}{
+		Alias: (*Alias)(m),
+	}
+
+	// Step 3: Unmarshal the data into the anonymous struct.
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	// Step 4: Convert the raw fields to the desired types
+	id, err := uuid.Parse(aux.Main.ID)
+	if err != nil {
+		return err
+	}
+
+	m.Main = *(*KeychainInfo)(aux.Main.KeychainInfoAlias)
+	m.Main.ID = id
+
+	m.Addresses = map[string]DerivationPath{}
+
+	for k, v := range aux.Addresses {
+		path := strings.Split(v, "/")
+
+		changeIndex, err := strconv.Atoi(path[0])
+		if err != nil {
+			return err
+		}
+
+		addressIndex, err := strconv.Atoi(path[1])
+		if err != nil {
+			return err
+		}
+
+		m.Addresses[k] = DerivationPath{
+			uint32(changeIndex), uint32(addressIndex),
+		}
+	}
+
+	m.Derivations = map[DerivationPath]string{}
+
+	for k, v := range aux.Derivations {
+		path := strings.Split(k, "/")
+
+		changeIndex, err := strconv.Atoi(path[0])
+		if err != nil {
+			return err
+		}
+
+		addressIndex, err := strconv.Atoi(path[1])
+		if err != nil {
+			return err
+		}
+
+		derivation := DerivationPath{
+			uint32(changeIndex), uint32(addressIndex),
+		}
+
+		m.Derivations[derivation] = v
+	}
+
+	return nil
 }
 
 // AddressInfo encapsulates an address along with useful information associated

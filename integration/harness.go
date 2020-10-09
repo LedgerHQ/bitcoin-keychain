@@ -4,6 +4,8 @@ import (
 	"context"
 	"net"
 
+	"github.com/go-redis/redis/v8"
+
 	pb "github.com/ledgerhq/bitcoin-keychain/pb/keychain"
 
 	controllers "github.com/ledgerhq/bitcoin-keychain/grpc"
@@ -30,7 +32,17 @@ func startKeychain() {
 	lis = bufconn.Listen(bufSize)
 	s := grpc.NewServer()
 
-	keychainController := controllers.NewKeychainController()
+	keychainController, err := controllers.NewKeychainController(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "", // no password set
+		DB:       0,  // use default DB
+	})
+	if err != nil {
+		log.WithFields(log.Fields{
+			"error": err,
+		}).Fatal("failed to init controller")
+	}
+
 	pb.RegisterKeychainServiceServer(s, keychainController)
 
 	go func() {

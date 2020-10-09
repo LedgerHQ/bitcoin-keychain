@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	"github.com/ledgerhq/bitcoin-keychain/log"
 	"github.com/pkg/errors"
 
 	"github.com/ledgerhq/bitcoin-keychain/pb/bitcoin"
@@ -138,6 +139,12 @@ func deriveAddress(
 			hex.EncodeToString(child.PublicKey), keychain.Main.Scheme,
 			keychain.Main.Network)
 	}
+
+	log.WithFields(log.Fields{
+		"id":   keychain.Main.ID.String(),
+		"addr": addr,
+		"path": path,
+	}).Info("[keystore] derive address")
 
 	// Feed address -> derivation path mapping
 	keychain.Addresses[addr] = path
