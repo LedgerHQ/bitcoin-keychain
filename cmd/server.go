@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/tls"
 	"fmt"
+	"google.golang.org/grpc/health/grpc_health_v1"
 	"net"
 
 	"github.com/go-redis/redis/v8"
@@ -33,6 +34,10 @@ func serve(grpcAddr string, redisOpts *redis.Options) {
 	}
 
 	pb.RegisterKeychainServiceServer(s, keychainController)
+
+	healthCheckerController := controllers.NewHealthChecker()
+
+	grpc_health_v1.RegisterHealthServer(s, healthCheckerController)
 
 	reflection.Register(s)
 
