@@ -3,7 +3,6 @@ package main
 import (
 	"crypto/tls"
 	"fmt"
-	"google.golang.org/grpc/health/grpc_health_v1"
 	"net"
 
 	"github.com/go-redis/redis/v8"
@@ -13,6 +12,7 @@ import (
 	"github.com/ledgerhq/bitcoin-keychain/log"
 	pb "github.com/ledgerhq/bitcoin-keychain/pb/keychain"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
 )
 
