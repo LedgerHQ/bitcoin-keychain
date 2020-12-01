@@ -217,6 +217,57 @@ func (c Controller) GetAllObservableAddresses(
 	return &pb.GetAllObservableAddressesResponse{Addresses: addrInfoList}, nil
 }
 
+func (c Controller) GetAddressesExtendendPublicKeys(
+	ctx context.Context, request *pb.GetAddressesExtendendPublicKeysRequest,
+) (*pb.GetAddressesExtendendPublicKeysResponse, error) {
+	id, err := KeychainID(request.KeychainId)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"id":    request.KeychainId,
+			"error": err,
+		}).Error("[grpc] GetAddressesExtendendPublicKeys: invalid KeychainID")
+
+		return nil, err
+	}
+
+	derivations := make([]keystore.DerivationPath, len(request.Derivations))
+
+	for idx, path := range request.Derivations {
+		derivationPath, err := DerivationPath(path.Derivation)
+
+		if err != nil {
+			log.WithFields(log.Fields{
+				"id":    request.KeychainId,
+				"error": err,
+			}).Error("[grpc] GetAddressesExtendendPublicKeys: invalid derivation path from request")
+
+			return nil, err
+		}
+
+		derivations[idx] = derivationPath
+	}
+
+	xpubs, err := store.GetAddressesExtendendPublicKeys(id, derivations)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"id":    request.KeychainId,
+			"error": err,
+		}).Error("[grpc] GetAddressesExtendendPublicKeys: failed to fetch from keystore")
+
+		return nil, err
+	}
+
+	response := &pb.GetAddressesExtendendPublicKeysResponse{ExtendendPublicKeys: xpubs}
+
+	log.WithFields(log.Fields{
+		"id":          id.String(),
+		"derivations": request.Derivations,
+		"xpubs":       xpubs,
+	}).Info("[grpc] GetAddressesExtendendPublicKeys: successful")
+
+	return response, nil
+}
+
 // NewKeychainController returns a new instance of a Controller struct that
 // implements the pb.KeychainServiceServer interface.
 func NewKeychainController(redisOpts *redis.Options) (*Controller, error) {

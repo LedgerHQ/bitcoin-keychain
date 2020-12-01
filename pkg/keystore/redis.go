@@ -390,3 +390,28 @@ func get(c *redis.Client, key string, dest interface{}) error {
 
 	return json.Unmarshal([]byte(p), dest)
 }
+
+// GetAddressesExtendendPublicKeys reads the derivation-to-xpub mapping in the keystore,
+// and returns extendend public keys corresponding to given derivations.
+func (s *RedisKeystore) GetAddressesExtendendPublicKeys(id uuid.UUID, derivations []DerivationPath) ([]string, error) {
+	var k Meta
+
+	err := get(s.db, id.String(), &k)
+	if err != nil {
+		return nil, ErrKeychainNotFound
+	}
+
+	xpubs := make([]string, len(derivations))
+
+	for idx, derivation := range derivations {
+		xpub, ok := k.Derivations[derivation]
+
+		if !ok {
+			return nil, ErrDerivationNotFound
+		}
+
+		xpubs[idx] = xpub
+	}
+
+	return xpubs, nil
+}

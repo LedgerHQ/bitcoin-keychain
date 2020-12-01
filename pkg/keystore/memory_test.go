@@ -427,3 +427,115 @@ func TestInMemoryKeystore_MarkPathAsUsed(t *testing.T) {
 		})
 	}
 }
+
+func TestInMemoryKeystore_GetAddressesExtendendPublicKeys(t *testing.T) {
+	tests := []struct {
+		name        string
+		extendedKey string
+		change      Change
+		scheme      Scheme
+		network     Network
+		size        uint32
+		derivations []DerivationPath
+		want        []string
+		wantErr     error
+	}{
+		{
+			name:        "p2pkh mainnet multi (change: external)",
+			extendedKey: "xpub1111",
+			change:      External,
+			scheme:      BIP84,
+			network:     Mainnet,
+			size:        5,
+			derivations: []DerivationPath{
+				{0, 0},
+				{0, 1},
+				{0, 2},
+				{0, 3},
+				{0, 4},
+			},
+			want: []string{
+				"deadbeef00",
+				"deadbeef01",
+				"deadbeef02",
+				"deadbeef03",
+				"deadbeef04",
+			},
+		},
+		// internal chain should return the same xpubs
+		{
+			name:        "p2pkh mainnet multi (change: internal)",
+			extendedKey: "xpub1111",
+			change:      Internal,
+			scheme:      BIP84,
+			network:     Mainnet,
+			size:        5,
+			derivations: []DerivationPath{
+				{1, 0},
+				{1, 1},
+				{1, 2},
+				{1, 3},
+				{1, 4},
+			},
+			want: []string{
+				"deadbeef00",
+				"deadbeef01",
+				"deadbeef02",
+				"deadbeef03",
+				"deadbeef04",
+			},
+		},
+		{
+			name:        "p2pkh mainnet multi (wrong given derivations)",
+			extendedKey: "xpub1111",
+			change:      Internal,
+			scheme:      BIP84,
+			network:     Mainnet,
+			size:        5,
+			derivations: []DerivationPath{
+				{1, 0},
+				{1, 6},
+				{1, 7},
+				{1, 8},
+				{1, 9},
+			},
+			wantErr: ErrDerivationNotFound,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			keystore := NewMockInMemoryKeystore()
+			info, err := keystore.Create(
+				tt.extendedKey, tt.scheme, tt.network, DefaultLookaheadSize)
+			if err != nil {
+				panic(err)
+			}
+
+			// Firstly, call get fresh addresses to derive addresses
+			_, err = keystore.GetFreshAddresses(info.ID, tt.change, tt.size)
+			if err != nil {
+				t.Fatalf("GetFreshAddresses() unexpected error: %v", err)
+			}
+
+			got, err := keystore.GetAddressesExtendendPublicKeys(info.ID, tt.derivations)
+			if err != nil && tt.wantErr == nil {
+				t.Fatalf("GetAddressesExtendendPublicKeys() unexpected error: %v", err)
+			}
+
+			if err == nil && tt.wantErr != nil {
+				t.Fatalf("GetAddressesExtendendPublicKeys() got no error, want '%v'",
+					tt.wantErr)
+			}
+
+			if err != nil && errors.Cause(err) != tt.wantErr {
+				t.Fatalf("GetAddressesExtendendPublicKeys() got error '%v', want '%v'",
+					err, tt.wantErr)
+			}
+
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Fatalf("GetAddressesExtendendPublicKeys() got = '%v', want = '%v'",
+					got, tt.want)
+			}
+		})
+	}
+}

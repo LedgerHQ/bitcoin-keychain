@@ -22,4 +22,8 @@ var (
 	// ErrAddressNotFound indicates that an address was not found in the
 	// address-to-derivations mapping in the keystore.
 	ErrAddressNotFound = errors.New("address not found")
+
+	// ErrDerivationNotFound indicates that an derivation was not found in the
+	// derivation-to-xpub mapping in the keystore.
+	ErrDerivationNotFound = errors.New("derivation not found")
 )

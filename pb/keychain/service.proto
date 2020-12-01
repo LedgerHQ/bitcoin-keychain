@@ -25,6 +25,27 @@ service KeychainService {
 
   // Get a list of all address that can be observed by the keychain.
   rpc GetAllObservableAddresses(GetAllObservableAddressesRequest) returns (GetAllObservableAddressesResponse) {}
+
+  // Get xpubs corresponding of given derivation paths for a registered keychain.
+  rpc GetAddressesExtendendPublicKeys(GetAddressesExtendendPublicKeysRequest) returns (GetAddressesExtendendPublicKeysResponse) {}
+}
+
+message GetAddressesExtendendPublicKeysRequest {
+  // UUID representing the keychain.
+  bytes keychain_id = 1;
+
+  // Given derivations to get extendend public keys.
+  repeated DerivationPath derivations = 2;
+}
+
+message GetAddressesExtendendPublicKeysResponse {
+  // Extendend public keys.
+  repeated string extendend_public_keys = 1;
+}
+
+// Message to wrap a derivation path.
+message DerivationPath {
+  repeated uint32 derivation = 2;
 }
 
 // BitcoinNetwork enumerates the list of all supported Bitcoin networks. It
