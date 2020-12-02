@@ -217,15 +217,15 @@ func (c Controller) GetAllObservableAddresses(
 	return &pb.GetAllObservableAddressesResponse{Addresses: addrInfoList}, nil
 }
 
-func (c Controller) GetAddressesExtendendPublicKeys(
-	ctx context.Context, request *pb.GetAddressesExtendendPublicKeysRequest,
-) (*pb.GetAddressesExtendendPublicKeysResponse, error) {
+func (c Controller) GetAddressesPublicKeys(
+	ctx context.Context, request *pb.GetAddressesPublicKeysRequest,
+) (*pb.GetAddressesPublicKeysResponse, error) {
 	id, err := KeychainID(request.KeychainId)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"id":    request.KeychainId,
 			"error": err,
-		}).Error("[grpc] GetAddressesExtendendPublicKeys: invalid KeychainID")
+		}).Error("[grpc] GetAddressesPublicKeys: invalid KeychainID")
 
 		return nil, err
 	}
@@ -239,7 +239,7 @@ func (c Controller) GetAddressesExtendendPublicKeys(
 			log.WithFields(log.Fields{
 				"id":    request.KeychainId,
 				"error": err,
-			}).Error("[grpc] GetAddressesExtendendPublicKeys: invalid derivation path from request")
+			}).Error("[grpc] GetAddressesPublicKeys: invalid derivation path from request")
 
 			return nil, err
 		}
@@ -247,23 +247,23 @@ func (c Controller) GetAddressesExtendendPublicKeys(
 		derivations[idx] = derivationPath
 	}
 
-	xpubs, err := store.GetAddressesExtendendPublicKeys(id, derivations)
+	publicKeys, err := store.GetAddressesPublicKeys(id, derivations)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"id":    request.KeychainId,
 			"error": err,
-		}).Error("[grpc] GetAddressesExtendendPublicKeys: failed to fetch from keystore")
+		}).Error("[grpc] GetAddressesPublicKeys: failed to fetch from keystore")
 
 		return nil, err
 	}
 
-	response := &pb.GetAddressesExtendendPublicKeysResponse{ExtendendPublicKeys: xpubs}
+	response := &pb.GetAddressesPublicKeysResponse{PublicKeys: publicKeys}
 
 	log.WithFields(log.Fields{
 		"id":          id.String(),
 		"derivations": request.Derivations,
-		"xpubs":       xpubs,
-	}).Info("[grpc] GetAddressesExtendendPublicKeys: successful")
+		"publicKeys":  publicKeys,
+	}).Info("[grpc] GetAddressesPublicKeys: successful")
 
 	return response, nil
 }

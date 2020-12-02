@@ -26,7 +26,7 @@ type Keystore interface {
 	GetAllObservableAddresses(id uuid.UUID, change Change,
 		fromIndex uint32, toIndex uint32) ([]AddressInfo, error)
 	GetDerivationPath(id uuid.UUID, address string) (DerivationPath, error)
-	GetAddressesExtendendPublicKeys(id uuid.UUID, derivations []DerivationPath) ([]string, error)
+	GetAddressesPublicKeys(id uuid.UUID, derivations []DerivationPath) ([]string, error)
 }
 
 // DefaultLookaheadSize defines the zone of addresses that the keychain must

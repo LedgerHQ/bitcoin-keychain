@@ -26,21 +26,21 @@ service KeychainService {
   // Get a list of all address that can be observed by the keychain.
   rpc GetAllObservableAddresses(GetAllObservableAddressesRequest) returns (GetAllObservableAddressesResponse) {}
 
-  // Get xpubs corresponding of given derivation paths for a registered keychain.
-  rpc GetAddressesExtendendPublicKeys(GetAddressesExtendendPublicKeysRequest) returns (GetAddressesExtendendPublicKeysResponse) {}
+  // Get public keys corresponding of given derivation paths for a registered keychain.
+  rpc GetAddressesPublicKeys(GetAddressesPublicKeysRequest) returns (GetAddressesPublicKeysResponse) {}
 }
 
-message GetAddressesExtendendPublicKeysRequest {
+message GetAddressesPublicKeysRequest {
   // UUID representing the keychain.
   bytes keychain_id = 1;
 
-  // Given derivations to get extendend public keys.
+  // Given derivations to get serialized compressed public keys.
   repeated DerivationPath derivations = 2;
 }
 
-message GetAddressesExtendendPublicKeysResponse {
-  // Extendend public keys.
-  repeated string extendend_public_keys = 1;
+message GetAddressesPublicKeysResponse {
+  // Serialized compressed public keys
+  repeated string public_keys = 1;
 }
 
 // Message to wrap a derivation path.

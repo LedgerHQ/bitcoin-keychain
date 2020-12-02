@@ -428,7 +428,7 @@ func TestInMemoryKeystore_MarkPathAsUsed(t *testing.T) {
 	}
 }
 
-func TestInMemoryKeystore_GetAddressesExtendendPublicKeys(t *testing.T) {
+func TestInMemoryKeystore_GetAddressesPublicKeys(t *testing.T) {
 	tests := []struct {
 		name        string
 		extendedKey string
@@ -462,7 +462,7 @@ func TestInMemoryKeystore_GetAddressesExtendendPublicKeys(t *testing.T) {
 				"deadbeef04",
 			},
 		},
-		// internal chain should return the same xpubs
+		// internal chain should return the same public keys
 		{
 			name:        "p2pkh mainnet multi (change: internal)",
 			extendedKey: "xpub1111",
@@ -517,23 +517,23 @@ func TestInMemoryKeystore_GetAddressesExtendendPublicKeys(t *testing.T) {
 				t.Fatalf("GetFreshAddresses() unexpected error: %v", err)
 			}
 
-			got, err := keystore.GetAddressesExtendendPublicKeys(info.ID, tt.derivations)
+			got, err := keystore.GetAddressesPublicKeys(info.ID, tt.derivations)
 			if err != nil && tt.wantErr == nil {
-				t.Fatalf("GetAddressesExtendendPublicKeys() unexpected error: %v", err)
+				t.Fatalf("GetAddressesPublicKeys() unexpected error: %v", err)
 			}
 
 			if err == nil && tt.wantErr != nil {
-				t.Fatalf("GetAddressesExtendendPublicKeys() got no error, want '%v'",
+				t.Fatalf("GetAddressesPublicKeys() got no error, want '%v'",
 					tt.wantErr)
 			}
 
 			if err != nil && errors.Cause(err) != tt.wantErr {
-				t.Fatalf("GetAddressesExtendendPublicKeys() got error '%v', want '%v'",
+				t.Fatalf("GetAddressesPublicKeys() got error '%v', want '%v'",
 					err, tt.wantErr)
 			}
 
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Fatalf("GetAddressesExtendendPublicKeys() got = '%v', want = '%v'",
+				t.Fatalf("GetAddressesPublicKeys() got = '%v', want = '%v'",
 					got, tt.want)
 			}
 		})
