@@ -168,7 +168,7 @@ func TestInMemoryKeystore_GetFreshAddress(t *testing.T) {
 		scheme      Scheme
 		change      Change
 		network     Network
-		want        string
+		want        *AddressInfo
 		wantErr     error
 	}{
 		{
@@ -177,7 +177,7 @@ func TestInMemoryKeystore_GetFreshAddress(t *testing.T) {
 			scheme:      BIP84,
 			change:      External,
 			network:     Mainnet,
-			want:        "deadbeef00-BIP84-mainnet",
+			want:        &AddressInfo{Address: "deadbeef00-BIP84-mainnet", Derivation: DerivationPath{0, 0}, Change: External},
 		},
 	}
 	for _, tt := range tests {
