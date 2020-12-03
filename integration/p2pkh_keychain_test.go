@@ -109,9 +109,15 @@ func TestP2PKHKeychainTest(t *testing.T) {
 		t.Fatalf("failed to get fresh external addr - error = %v", err)
 	}
 
-	if gotReceiveAddr.Addresses[0] != "151krzHgfkNoH3XHBzEVi6tSn4db7pVjmR" {
+	expectedFreshAddress := &pb.AddressInfo{
+		Address:    "151krzHgfkNoH3XHBzEVi6tSn4db7pVjmR",
+		Derivation: []uint32{0, 11},
+		Change:     pb.Change_CHANGE_EXTERNAL,
+	}
+
+	if gotReceiveAddr.Addresses[0] != expectedFreshAddress {
 		t.Fatalf("GetFreshAddresses() got = '%v', want = '%v'",
-			gotReceiveAddr.Addresses, []string{"151krzHgfkNoH3XHBzEVi6tSn4db7pVjmR"})
+			gotReceiveAddr.Addresses, []*pb.AddressInfo{expectedFreshAddress})
 	}
 
 	if _, err := client.MarkAddressesAsUsed(
@@ -132,8 +138,14 @@ func TestP2PKHKeychainTest(t *testing.T) {
 		t.Fatalf("failed to get fresh external addr - error = %v", err)
 	}
 
-	if gotNextReceiveAddr.Addresses[0] != "18tMkbibtxJPQoTPUv8s3mSXqYzEsrbeRb" {
+	expectedNextFreshAddress := &pb.AddressInfo{
+		Address:    "18tMkbibtxJPQoTPUv8s3mSXqYzEsrbeRb",
+		Derivation: []uint32{0, 12},
+		Change:     pb.Change_CHANGE_EXTERNAL,
+	}
+
+	if gotNextReceiveAddr.Addresses[0] != expectedNextFreshAddress {
 		t.Fatalf("GetFreshAddresses() got = '%v', want = '%v'",
-			gotNextReceiveAddr.Addresses, []string{"18tMkbibtxJPQoTPUv8s3mSXqYzEsrbeRb"})
+			gotNextReceiveAddr.Addresses, []*pb.AddressInfo{expectedNextFreshAddress})
 	}
 }

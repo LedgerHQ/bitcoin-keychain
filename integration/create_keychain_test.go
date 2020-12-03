@@ -27,40 +27,56 @@ func TestKeychainRegistration(t *testing.T) {
 			name:    "bitcoin mainnet p2pkh",
 			fixture: BitcoinMainnetP2PKH,
 			externalAddress: &pb.GetFreshAddressesResponse{
-				Addresses: []string{"151krzHgfkNoH3XHBzEVi6tSn4db7pVjmR"},
+				Addresses: []*pb.AddressInfo{
+					{Address: "151krzHgfkNoH3XHBzEVi6tSn4db7pVjmR", Derivation: []uint32{0, 0}, Change: pb.Change_CHANGE_EXTERNAL},
+				},
 			},
 			internalAddress: &pb.GetFreshAddressesResponse{
-				Addresses: []string{"13hSrTAvfRzyEcjRcGS5gLEcNVNDhPvvUv"},
+				Addresses: []*pb.AddressInfo{
+					{Address: "13hSrTAvfRzyEcjRcGS5gLEcNVNDhPvvUv", Derivation: []uint32{1, 0}, Change: pb.Change_CHANGE_INTERNAL},
+				},
 			},
 		},
 		{
 			name:    "bitcoin testnet3 p2pkh",
 			fixture: BitcoinTestnet3P2PKH,
 			externalAddress: &pb.GetFreshAddressesResponse{
-				Addresses: []string{"mkpZhYtJu2r87Js3pDiWJDmPte2NRZ8bJV"},
+				Addresses: []*pb.AddressInfo{
+					{Address: "mkpZhYtJu2r87Js3pDiWJDmPte2NRZ8bJV", Derivation: []uint32{0, 0}, Change: pb.Change_CHANGE_EXTERNAL},
+				},
 			},
 			internalAddress: &pb.GetFreshAddressesResponse{
-				Addresses: []string{"mi8nhzZgGZQthq6DQHbru9crMDerUdTKva"},
+				Addresses: []*pb.AddressInfo{
+					{Address: "mi8nhzZgGZQthq6DQHbru9crMDerUdTKva", Derivation: []uint32{1, 0}, Change: pb.Change_CHANGE_INTERNAL},
+				},
 			},
 		},
 		{
 			name:    "bitcoin testnet3 p2sh-p2wpkh",
 			fixture: BitcoinTestnet3P2SHP2WPKH,
 			externalAddress: &pb.GetFreshAddressesResponse{
-				Addresses: []string{"2MvuUMAG1NFQmmM69Writ6zTsYCnQHFG9BF"},
+				Addresses: []*pb.AddressInfo{
+					{Address: "2MvuUMAG1NFQmmM69Writ6zTsYCnQHFG9BF", Derivation: []uint32{0, 0}, Change: pb.Change_CHANGE_EXTERNAL},
+				},
 			},
 			internalAddress: &pb.GetFreshAddressesResponse{
-				Addresses: []string{"2MsMvWTbPMg4eiSudDa5i7y8XNC8fLCok3c"},
+				Addresses: []*pb.AddressInfo{
+					{Address: "2MsMvWTbPMg4eiSudDa5i7y8XNC8fLCok3c", Derivation: []uint32{1, 0}, Change: pb.Change_CHANGE_INTERNAL},
+				},
 			},
 		},
 		{
 			name:    "bitcoin testnet3 p2wpkh",
 			fixture: BitcoinMainnetP2WPKH,
 			externalAddress: &pb.GetFreshAddressesResponse{
-				Addresses: []string{"bc1qh4kl0a0a3d7su8udc2rn62f8w939prqpl34z86"},
+				Addresses: []*pb.AddressInfo{
+					{Address: "bc1qh4kl0a0a3d7su8udc2rn62f8w939prqpl34z86", Derivation: []uint32{0, 0}, Change: pb.Change_CHANGE_EXTERNAL},
+				},
 			},
 			internalAddress: &pb.GetFreshAddressesResponse{
-				Addresses: []string{"bc1qry3crfssh8w6guajms7upclgqsfac4fs4g7nwj"},
+				Addresses: []*pb.AddressInfo{
+					{Address: "bc1qry3crfssh8w6guajms7upclgqsfac4fs4g7nwj", Derivation: []uint32{1, 0}, Change: pb.Change_CHANGE_INTERNAL},
+				},
 			},
 		},
 	}
