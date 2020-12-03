@@ -91,7 +91,24 @@ func (c Controller) GetFreshAddresses(
 		return nil, err
 	}
 
-	return &pb.GetFreshAddressesResponse{Addresses: addrs}, nil
+	var addrInfoList []*pb.AddressInfo
+
+	for _, addrInfo := range addrs {
+		addrInfoProto, err := AddressInfoProto(addrInfo)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"id":    id.String(),
+				"addr":  addrInfo.Address,
+				"error": err,
+			}).Error("[grpc] GetAllObservableAddresses: invalid AddressInfo")
+
+			return nil, err
+		}
+
+		addrInfoList = append(addrInfoList, addrInfoProto)
+	}
+
+	return &pb.GetFreshAddressesResponse{Addresses: addrInfoList}, nil
 }
 
 func (c Controller) MarkAddressesAsUsed(

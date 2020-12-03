@@ -115,13 +115,13 @@ func (s *InMemoryKeystore) Create(
 //
 // See GetFreshAddresses for getting fresh addresses in bulk, and for further
 // details.
-func (s InMemoryKeystore) GetFreshAddress(id uuid.UUID, change Change) (string, error) {
+func (s InMemoryKeystore) GetFreshAddress(id uuid.UUID, change Change) (*AddressInfo, error) {
 	addrs, err := s.GetFreshAddresses(id, change, 1)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return addrs[0], nil
+	return &addrs[0], nil
 }
 
 // GetFreshAddresses retrieves bulk fresh addresses from the in-memory keystore.
@@ -131,8 +131,8 @@ func (s InMemoryKeystore) GetFreshAddress(id uuid.UUID, change Change) (string, 
 // list.
 func (s InMemoryKeystore) GetFreshAddresses(
 	id uuid.UUID, change Change, size uint32,
-) ([]string, error) {
-	addrs := []string{}
+) ([]AddressInfo, error) {
+	addrs := []AddressInfo{}
 
 	k, ok := s.db[id]
 	if !ok {
@@ -162,7 +162,13 @@ func (s InMemoryKeystore) GetFreshAddresses(
 				return addrs, err
 			}
 
-			addrs = append(addrs, addr)
+			addrInfo := AddressInfo{
+				Address:    addr,
+				Derivation: path,
+				Change:     change,
+			}
+
+			addrs = append(addrs, addrInfo)
 		}
 	}
 

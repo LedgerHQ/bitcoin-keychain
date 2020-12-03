@@ -19,8 +19,8 @@ type Keystore interface {
 	Delete(id uuid.UUID) error
 	Create(extendedPublicKey string, scheme Scheme, net Network,
 		lookaheadSize uint32) (KeychainInfo, error)
-	GetFreshAddress(id uuid.UUID, change Change) (string, error)
-	GetFreshAddresses(id uuid.UUID, change Change, size uint32) ([]string, error)
+	GetFreshAddress(id uuid.UUID, change Change) (*AddressInfo, error)
+	GetFreshAddresses(id uuid.UUID, change Change, size uint32) ([]AddressInfo, error)
 	MarkPathAsUsed(id uuid.UUID, path DerivationPath) error
 	MarkAddressAsUsed(id uuid.UUID, address string) error
 	GetAllObservableAddresses(id uuid.UUID, change Change,

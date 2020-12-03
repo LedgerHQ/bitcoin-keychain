@@ -161,7 +161,7 @@ message GetFreshAddressesRequest {
 }
 
 message GetFreshAddressesResponse {
-  repeated string addresses = 1;
+  repeated AddressInfo addresses = 1;
 }
 
 message MarkAddressesAsUsedRequest {

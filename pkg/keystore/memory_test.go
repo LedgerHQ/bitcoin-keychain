@@ -220,7 +220,7 @@ func TestInMemoryKeystore_GetFreshAddresses(t *testing.T) {
 		scheme      Scheme
 		network     Network
 		size        uint32
-		want        []string
+		want        []AddressInfo
 		wantErr     error
 	}{
 		{
@@ -230,7 +230,7 @@ func TestInMemoryKeystore_GetFreshAddresses(t *testing.T) {
 			change:      External,
 			network:     Mainnet,
 			size:        0,
-			want:        []string{},
+			want:        []AddressInfo{},
 		},
 		{
 			name:        "p2pkh mainnet multi",
@@ -239,12 +239,12 @@ func TestInMemoryKeystore_GetFreshAddresses(t *testing.T) {
 			change:      External,
 			network:     Mainnet,
 			size:        5,
-			want: []string{
-				"deadbeef00-BIP84-mainnet",
-				"deadbeef01-BIP84-mainnet",
-				"deadbeef02-BIP84-mainnet",
-				"deadbeef03-BIP84-mainnet",
-				"deadbeef04-BIP84-mainnet",
+			want: []AddressInfo{
+				{Address: "deadbeef00-BIP84-mainnet", Derivation: DerivationPath{0, 0}, Change: External},
+				{Address: "deadbeef01-BIP84-mainnet", Derivation: DerivationPath{0, 1}, Change: External},
+				{Address: "deadbeef02-BIP84-mainnet", Derivation: DerivationPath{0, 2}, Change: External},
+				{Address: "deadbeef03-BIP84-mainnet", Derivation: DerivationPath{0, 3}, Change: External},
+				{Address: "deadbeef04-BIP84-mainnet", Derivation: DerivationPath{0, 4}, Change: External},
 			},
 		},
 	}

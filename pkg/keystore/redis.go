@@ -135,13 +135,13 @@ func (s *RedisKeystore) Create(
 //
 // See GetFreshAddresses for getting fresh addresses in bulk, and for further
 // details.
-func (s *RedisKeystore) GetFreshAddress(id uuid.UUID, change Change) (string, error) {
+func (s *RedisKeystore) GetFreshAddress(id uuid.UUID, change Change) (*AddressInfo, error) {
 	addrs, err := s.GetFreshAddresses(id, change, 1)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return addrs[0], nil
+	return &addrs[0], nil
 }
 
 // GetFreshAddresses retrieves bulk fresh addresses from the in-memory keystore.
@@ -151,8 +151,8 @@ func (s *RedisKeystore) GetFreshAddress(id uuid.UUID, change Change) (string, er
 // list.
 func (s *RedisKeystore) GetFreshAddresses(
 	id uuid.UUID, change Change, size uint32,
-) ([]string, error) {
-	addrs := []string{}
+) ([]AddressInfo, error) {
+	addrs := []AddressInfo{}
 
 	var k Meta
 
@@ -188,7 +188,13 @@ func (s *RedisKeystore) GetFreshAddresses(
 				return nil, err
 			}
 
-			addrs = append(addrs, addr)
+			addrInfo := AddressInfo{
+				Address:    addr,
+				Derivation: path,
+				Change:     change,
+			}
+
+			addrs = append(addrs, addrInfo)
 		}
 	}
 
