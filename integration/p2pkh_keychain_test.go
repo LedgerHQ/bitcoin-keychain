@@ -37,57 +37,57 @@ func TestP2PKHKeychainTest(t *testing.T) {
 	}
 
 	wantObsAddrs := &pb.GetAllObservableAddressesResponse{Addresses: []*pb.AddressInfo{
-		&pb.AddressInfo{
+		{
 			Address:    "151krzHgfkNoH3XHBzEVi6tSn4db7pVjmR",
 			Derivation: []uint32{0, 0},
 			Change:     pb.Change_CHANGE_EXTERNAL,
 		},
-		&pb.AddressInfo{
+		{
 			Address:    "18tMkbibtxJPQoTPUv8s3mSXqYzEsrbeRb",
 			Derivation: []uint32{0, 1},
 			Change:     pb.Change_CHANGE_EXTERNAL,
 		},
-		&pb.AddressInfo{
+		{
 			Address:    "1GJr9FHZ1pbR4hjhX24M4L1BDUd2QogYYA",
 			Derivation: []uint32{0, 2},
 			Change:     pb.Change_CHANGE_EXTERNAL,
 		},
-		&pb.AddressInfo{
+		{
 			Address:    "1KZB7aFfuZE2skJQPHH56VhSxUpUBjouwQ",
 			Derivation: []uint32{0, 3},
 			Change:     pb.Change_CHANGE_EXTERNAL,
 		},
-		&pb.AddressInfo{
+		{
 			Address:    "1FyjDvDFcXLMmhMWD6u8bFovLgkhZabhTQ",
 			Derivation: []uint32{0, 4},
 			Change:     pb.Change_CHANGE_EXTERNAL,
 		},
-		&pb.AddressInfo{
+		{
 			Address:    "1NGp18iPyWfSZz4AWnwT6HptDdVJfTjxnF",
 			Derivation: []uint32{0, 5},
 			Change:     pb.Change_CHANGE_EXTERNAL,
 		},
-		&pb.AddressInfo{
+		{
 			Address:    "1L36ug5kWFLbMysfkAexh9LeicyMAteuEg",
 			Derivation: []uint32{0, 6},
 			Change:     pb.Change_CHANGE_EXTERNAL,
 		},
-		&pb.AddressInfo{
+		{
 			Address:    "169V9snkmcdzpEDhRyLMnEuhLKyWdjzhfd",
 			Derivation: []uint32{0, 7},
 			Change:     pb.Change_CHANGE_EXTERNAL,
 		},
-		&pb.AddressInfo{
+		{
 			Address:    "14K3JxsLwhpLiECaoJMsZYyk9peYP1Gtty",
 			Derivation: []uint32{0, 8},
 			Change:     pb.Change_CHANGE_EXTERNAL,
 		},
-		&pb.AddressInfo{
+		{
 			Address:    "1GEix38AknUMWH8DYSn43HqodoB7RjyBAJ",
 			Derivation: []uint32{0, 9},
 			Change:     pb.Change_CHANGE_EXTERNAL,
 		},
-		&pb.AddressInfo{
+		{
 			Address:    "1918hHSQNsNMRkDCUMy7DUmJ8GJzwfRkUV",
 			Derivation: []uint32{0, 10},
 			Change:     pb.Change_CHANGE_EXTERNAL,
@@ -111,7 +111,7 @@ func TestP2PKHKeychainTest(t *testing.T) {
 
 	expectedFreshAddress := &pb.AddressInfo{
 		Address:    "151krzHgfkNoH3XHBzEVi6tSn4db7pVjmR",
-		Derivation: []uint32{0, 11},
+		Derivation: []uint32{0, 0},
 		Change:     pb.Change_CHANGE_EXTERNAL,
 	}
 
