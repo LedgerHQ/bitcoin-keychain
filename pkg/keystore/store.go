@@ -17,7 +17,7 @@ import (
 type Keystore interface {
 	Get(id uuid.UUID) (KeychainInfo, error)
 	Delete(id uuid.UUID) error
-	Create(extendedPublicKey string, scheme Scheme, net Network,
+	Create(extendedPublicKey string, fromChainCode *FromChainCode, scheme Scheme, net Network,
 		lookaheadSize uint32) (KeychainInfo, error)
 	GetFreshAddress(id uuid.UUID, change Change) (*AddressInfo, error)
 	GetFreshAddresses(id uuid.UUID, change Change, size uint32) ([]AddressInfo, error)
@@ -93,6 +93,21 @@ type Meta struct {
 	Main        KeychainInfo              `json:"main"`
 	Derivations map[DerivationPath]string `json:"derivations"` // public key at HD tree depth 5
 	Addresses   map[string]DerivationPath `json:"addresses"`   // derivation path at HD tree depth 5
+}
+
+type FromChainCode struct {
+	// Serialized public key associated with the extended key derived
+	// at the account-level derivation path.
+	//
+	// Both compressed as well as uncompressed public keys are accepted.
+	PublicKey []byte
+	// Serialized chain code associated with the extended key derived at the
+	// account-level derivation path.
+	//
+	// This field is 32 bytes long.
+	ChainCode []byte
+	// Index at BIP32 level 3.
+	AccountIndex uint32
 }
 
 func (m *Meta) MarshalJSON() ([]byte, error) {

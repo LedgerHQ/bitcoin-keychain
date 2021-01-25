@@ -16,10 +16,10 @@ func TestP2PKHKeychainTest(t *testing.T) {
 	defer conn.Close()
 
 	info, err := client.CreateKeychain(ctx, &pb.CreateKeychainRequest{
-		ExtendedPublicKey: BitcoinMainnetP2PKH.ExtendedPublicKey,
-		LookaheadSize:     20,
-		Network:           BitcoinMainnetP2PKH.Network,
-		Scheme:            BitcoinMainnetP2PKH.Scheme,
+		Account:       &pb.CreateKeychainRequest_ExtendedPublicKey{ExtendedPublicKey: BitcoinMainnetP2PKH.ExtendedPublicKey},
+		LookaheadSize: 20,
+		Network:       BitcoinMainnetP2PKH.Network,
+		Scheme:        BitcoinMainnetP2PKH.Scheme,
 	})
 
 	if err != nil {

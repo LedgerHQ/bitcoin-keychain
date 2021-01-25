@@ -83,10 +83,10 @@ func TestKeychainRegistration(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			info, err := client.CreateKeychain(ctx, &pb.CreateKeychainRequest{
-				ExtendedPublicKey: tt.fixture.ExtendedPublicKey,
-				LookaheadSize:     20,
-				Network:           tt.fixture.Network,
-				Scheme:            tt.fixture.Scheme,
+				Account:       &pb.CreateKeychainRequest_ExtendedPublicKey{ExtendedPublicKey: tt.fixture.ExtendedPublicKey},
+				LookaheadSize: 20,
+				Network:       tt.fixture.Network,
+				Scheme:        tt.fixture.Scheme,
 			})
 			if err != nil {
 				t.Fatalf("failed to create keychain - error = %v", err)

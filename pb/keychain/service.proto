@@ -85,10 +85,33 @@ message AddressInfo {
 }
 
 message CreateKeychainRequest {
-  string extended_public_key = 1;
-  Scheme scheme = 2;
-  uint32 lookahead_size = 3;
-  BitcoinNetwork network = 4;
+  // account to register:
+  // could be an extended_public_key 
+  // or public_key + chain_code + account_index
+  oneof account {
+    string extended_public_key = 1;
+    FromChainCode from_chain_code = 2;
+  }
+  Scheme scheme = 3;
+  uint32 lookahead_size = 4;
+  BitcoinNetwork network = 5;
+}
+
+message FromChainCode {
+  // Serialized public key associated with the extended key derived
+  // at the account-level derivation path.
+  //
+  // Both compressed as well as uncompressed public keys are accepted.
+  bytes public_key = 1;
+
+  // Serialized chain code associated with the extended key derived at the
+  // account-level derivation path.
+  //
+  // This field is 32 bytes long.
+  bytes chain_code = 2;
+
+  // Index at BIP32 level 3.
+  uint32 account_index = 3;
 }
 
 message DeleteKeychainRequest {

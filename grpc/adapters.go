@@ -145,3 +145,16 @@ func AddressInfoProto(info keystore.AddressInfo) (*pb.AddressInfo, error) {
 		Change:     change,
 	}, nil
 }
+
+// FromChainCode is an adapter function to convert pb.FromChainCode to a keystore.FromChainCode instance.
+func FromChainCode(chainCodeInfo *pb.FromChainCode) *keystore.FromChainCode {
+	if chainCodeInfo != nil {
+		return &keystore.FromChainCode{
+			PublicKey:    chainCodeInfo.PublicKey,
+			ChainCode:    chainCodeInfo.ChainCode,
+			AccountIndex: chainCodeInfo.AccountIndex,
+		}
+	}
+
+	return nil
+}

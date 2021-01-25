@@ -37,8 +37,11 @@ func (c Controller) CreateKeychain(
 		lookaheadSize = s
 	}
 
+	extendedKey := request.GetExtendedPublicKey()
+	fromChainCode := FromChainCode(request.GetFromChainCode())
+
 	r, err := store.Create(
-		request.ExtendedPublicKey, scheme, net, lookaheadSize)
+		extendedKey, fromChainCode, scheme, net, lookaheadSize)
 	if err != nil {
 		return nil, err
 	}
