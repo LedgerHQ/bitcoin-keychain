@@ -50,6 +50,18 @@ func (s *InMemoryKeystore) Delete(id uuid.UUID) error {
 	return nil
 }
 
+// Reset removes derivations and addresses of a keychain corresponding to a UUID from the keystore.
+func (s *InMemoryKeystore) Reset(id uuid.UUID) error {
+	keychain, ok := s.db[id]
+	if !ok {
+		return ErrKeychainNotFound
+	}
+
+	keychain.ResetKeychainMeta()
+
+	return nil
+}
+
 // Create parses a populates the in-memory keystore with the corresponding
 // keychain information, based on the provided extended public key, Scheme,
 // and Network information.

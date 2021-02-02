@@ -17,6 +17,7 @@ import (
 type Keystore interface {
 	Get(id uuid.UUID) (KeychainInfo, error)
 	Delete(id uuid.UUID) error
+	Reset(id uuid.UUID) error
 	Create(extendedPublicKey string, fromChainCode *FromChainCode, scheme Scheme, net Network,
 		lookaheadSize uint32) (KeychainInfo, error)
 	GetFreshAddress(id uuid.UUID, change Change) (*AddressInfo, error)
@@ -326,4 +327,12 @@ func (m Meta) MaxObservableIndex(change Change) (uint32, error) {
 	default:
 		return 0, errors.Wrapf(ErrUnrecognizedChange, fmt.Sprint(change))
 	}
+}
+
+// ResetKeychainMeta resets the max consecutive indexes (external and interal), the derivations and addresses maps.
+func (m *Meta) ResetKeychainMeta() {
+	m.Main.MaxConsecutiveExternalIndex = 0
+	m.Main.MaxConsecutiveInternalIndex = 0
+	m.Derivations = map[DerivationPath]string{}
+	m.Addresses = map[string]DerivationPath{}
 }

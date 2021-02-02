@@ -60,6 +60,17 @@ func (c Controller) DeleteKeychain(
 	return &emptypb.Empty{}, store.Delete(id)
 }
 
+func (c Controller) ResetKeychain(
+	ctx context.Context, request *pb.ResetKeychainRequest,
+) (*emptypb.Empty, error) {
+	id, err := KeychainID(request.KeychainId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &emptypb.Empty{}, store.Reset(id)
+}
+
 func (c Controller) GetKeychainInfo(
 	ctx context.Context, request *pb.GetKeychainInfoRequest,
 ) (*pb.KeychainInfo, error) {

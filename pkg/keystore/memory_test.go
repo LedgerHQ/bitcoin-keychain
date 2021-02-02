@@ -570,3 +570,63 @@ func TestInMemoryKeystore_GetAddressesPublicKeys(t *testing.T) {
 		})
 	}
 }
+
+func TestInMemoryKeystore_Reset(t *testing.T) {
+	keystore := NewMockInMemoryKeystore()
+
+	info, err := keystore.Create(
+		"xpub1111", nil, BIP84, Mainnet, DefaultLookaheadSize)
+	if err != nil {
+		panic(err)
+	}
+
+	workflow := []struct {
+		name                        string
+		path                        DerivationPath
+		change                      Change
+		wantFreshAddressBeforeReset *AddressInfo
+		wantFreshAddressAfterReset  *AddressInfo
+		wantErr                     error
+	}{
+		{
+			name:                        "mark 0/0 as used then reset",
+			path:                        DerivationPath{0, 0},
+			change:                      External,
+			wantFreshAddressBeforeReset: &AddressInfo{Address: "deadbeef01-BIP84-mainnet", Derivation: DerivationPath{0, 1}, Change: External},
+			wantFreshAddressAfterReset:  &AddressInfo{Address: "deadbeef00-BIP84-mainnet", Derivation: DerivationPath{0, 0}, Change: External},
+		},
+	}
+
+	for _, tt := range workflow {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := keystore.MarkPathAsUsed(info.ID, tt.path); err != nil {
+				t.Fatalf("MarkPathAsUsed() unexpected error: %v", err)
+			}
+
+			got, err := keystore.GetFreshAddress(info.ID, tt.change)
+			if err != nil {
+				t.Fatalf("GetFreshAddress() unexpected error: %v", err)
+			}
+
+			if !reflect.DeepEqual(got, tt.wantFreshAddressBeforeReset) {
+				t.Fatalf("GetFreshAddress() got = '%v', want = '%v'",
+					got, tt.wantFreshAddressBeforeReset)
+			}
+
+			err = keystore.Reset(info.ID)
+			if err != nil {
+				t.Fatalf("Reset() unexpected error: %v", err)
+			}
+
+			gotAfterReset, err := keystore.GetFreshAddress(info.ID, tt.change)
+			if err != nil {
+				t.Fatalf("GetFreshAddress() unexpected error: %v", err)
+			}
+
+			if !reflect.DeepEqual(gotAfterReset, tt.wantFreshAddressAfterReset) {
+				t.Fatalf("GetFreshAddress() got = '%v', want = '%v'",
+					gotAfterReset, tt.wantFreshAddressAfterReset)
+			}
+		})
+	}
+}

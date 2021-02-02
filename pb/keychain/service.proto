@@ -13,6 +13,9 @@ service KeychainService {
   // Delete a keychain by UUID.
   rpc DeleteKeychain(DeleteKeychainRequest) returns (google.protobuf.Empty) {}
 
+  // Reset a keychain by UUID.
+  rpc ResetKeychain(ResetKeychainRequest) returns (google.protobuf.Empty) {}
+
   // Get keychain metadata by UUID.
   rpc GetKeychainInfo(GetKeychainInfoRequest) returns (KeychainInfo) {}
 
@@ -115,6 +118,11 @@ message FromChainCode {
 }
 
 message DeleteKeychainRequest {
+  // UUID representing the keychain
+  bytes keychain_id = 1;
+}
+
+message ResetKeychainRequest {
   // UUID representing the keychain
   bytes keychain_id = 1;
 }

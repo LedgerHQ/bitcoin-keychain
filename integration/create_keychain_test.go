@@ -4,6 +4,7 @@ package integration
 
 import (
 	"context"
+	"reflect"
 	"testing"
 
 	"github.com/golang/protobuf/proto"
@@ -129,6 +130,60 @@ func TestKeychainRegistration(t *testing.T) {
 					Change:     pb.Change_CHANGE_INTERNAL,
 					BatchSize:  1,
 				})
+			if err != nil {
+				t.Fatalf("failed to get fresh internal addr - error = %v", err)
+			}
+
+			if !proto.Equal(gotIntAddr, tt.internalAddress) {
+				t.Fatalf("GetFreshAddresses() info = '%v', want = '%v'",
+					gotIntAddr.Addresses, tt.internalAddress.Addresses)
+			}
+
+			// Mark first internal address as used
+			_, err = client.MarkAddressesAsUsed(ctx, &pb.MarkAddressesAsUsedRequest{
+				KeychainId: info.KeychainId,
+				Addresses:  []string{gotIntAddr.Addresses[0].Address},
+			})
+
+			if err != nil {
+				t.Fatalf("failed to mark first interal addr as used - error = %v", err)
+			}
+
+			// Check fresh addresses not return the mark as used one
+			gotIntAddrAfterMark, err := client.GetFreshAddresses(
+				ctx, &pb.GetFreshAddressesRequest{
+					KeychainId: info.KeychainId,
+					Change:     pb.Change_CHANGE_INTERNAL,
+					BatchSize:  1,
+				})
+
+			if err != nil {
+				t.Fatalf("failed to get fresh internal addr - error = %v", err)
+			}
+
+			nextIntFreshDerivationPath := gotIntAddrAfterMark.Addresses[0].Derivation
+			expectedNextIntFreshDerivationPath := []uint32{1, 1}
+
+			if !reflect.DeepEqual(nextIntFreshDerivationPath, expectedNextIntFreshDerivationPath) {
+				t.Fatalf("Next fresh internal index info = '%v', want = '%v'",
+					nextIntFreshDerivationPath, expectedNextIntFreshDerivationPath)
+			}
+
+			// Reset the keychain for this id
+			_, err = client.ResetKeychain(ctx, &pb.ResetKeychainRequest{KeychainId: info.KeychainId})
+
+			if err != nil {
+				t.Fatalf("failed to reset keychain = %v", err)
+			}
+
+			// Check that fresh addresses after reset are good
+			gotIntAddr, err = client.GetFreshAddresses(
+				ctx, &pb.GetFreshAddressesRequest{
+					KeychainId: info.KeychainId,
+					Change:     pb.Change_CHANGE_INTERNAL,
+					BatchSize:  1,
+				})
+
 			if err != nil {
 				t.Fatalf("failed to get fresh internal addr - error = %v", err)
 			}

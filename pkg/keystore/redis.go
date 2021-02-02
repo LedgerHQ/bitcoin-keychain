@@ -66,6 +66,24 @@ func (s *RedisKeystore) Delete(id uuid.UUID) error {
 	return nil
 }
 
+// Reset removes derivations and addresses of a keychain corresponding to a UUID from the keystore.
+func (s *RedisKeystore) Reset(id uuid.UUID) error {
+	var meta Meta
+
+	err := get(s.db, id.String(), &meta)
+	if err != nil {
+		return ErrKeychainNotFound
+	}
+
+	meta.ResetKeychainMeta()
+
+	if err := set(s.db, id.String(), meta); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // Create parses a populates the in-memory keystore with the corresponding
 // keychain information, based on the provided extended public key, Scheme,
 // and Network information.
