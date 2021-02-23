@@ -57,3 +57,15 @@ var BitcoinMainnetP2WPKH = Fixture{
 	},
 	Scheme: pb.Scheme_SCHEME_BIP84,
 }
+
+var LitecoinMainnetP2WPKH = Fixture{
+	ExternalDescriptor: "wpkh(Ltub2YC8XgcRjMJqvX8LsuBxdM7PKE5uih6247CpgK2rfEdzEGt1YHVHW4L865ss5eEy2K1KixTMkrHJbzTtqxpiGpM4wyrxYRFJFxuACSJqkyo/0/*)",
+	InternalDescriptor: "wpkh(Ltub2YC8XgcRjMJqvX8LsuBxdM7PKE5uih6247CpgK2rfEdzEGt1YHVHW4L865ss5eEy2K1KixTMkrHJbzTtqxpiGpM4wyrxYRFJFxuACSJqkyo/1/*)",
+	ExtendedPublicKey:  "Ltub2YC8XgcRjMJqvX8LsuBxdM7PKE5uih6247CpgK2rfEdzEGt1YHVHW4L865ss5eEy2K1KixTMkrHJbzTtqxpiGpM4wyrxYRFJFxuACSJqkyo",
+	ChainParams: &pb.ChainParams{
+		Network: &pb.ChainParams_LitecoinNetwork{
+			LitecoinNetwork: pb.LitecoinNetwork_LITECOIN_NETWORK_MAINNET,
+		},
+	},
+	Scheme: pb.Scheme_SCHEME_BIP84,
+}
