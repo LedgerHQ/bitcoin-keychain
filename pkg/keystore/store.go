@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/ledgerhq/bitcoin-keychain/pkg/chaincfg"
 	"github.com/pkg/errors"
 )
 
@@ -18,7 +19,7 @@ type Keystore interface {
 	Get(id uuid.UUID) (KeychainInfo, error)
 	Delete(id uuid.UUID) error
 	Reset(id uuid.UUID) error
-	Create(extendedPublicKey string, fromChainCode *FromChainCode, scheme Scheme, net Network,
+	Create(extendedPublicKey string, fromChainCode *FromChainCode, scheme Scheme, net chaincfg.Network,
 		lookaheadSize uint32) (KeychainInfo, error)
 	GetFreshAddress(id uuid.UUID, change Change) (*AddressInfo, error)
 	GetFreshAddresses(id uuid.UUID, change Change, size uint32) ([]AddressInfo, error)
@@ -48,44 +49,26 @@ const (
 	BIP84 Scheme = "BIP84"
 )
 
-// Network defines the network (and therefore the chain parameters)
-// that a keychain is associated to.
-type Network string
-
-const (
-	// Mainnet indicates the main Bitcoin network
-	Mainnet Network = "mainnet"
-
-	// Testnet3 indicates the current Bitcoin test network
-	Testnet3 Network = "testnet3"
-
-	// Regtest indicates the Bitcoin regression test network
-	Regtest Network = "regtest"
-
-	// LitecoinMainnet indicates the main Litecoin network
-	LitecoinMainnet Network = "litecoin_mainnet"
-)
-
 // KeychainInfo models the global information related to an account registered
 // in the keystore.
 //
 // Rather than using the associated gRPC message struct, it is defined here
 // independently to avoid having gRPC dependency in this package.
 type KeychainInfo struct {
-	ID                            uuid.UUID `json:"id"`                               // Keychain ID as a uuid.UUID type
-	ExternalDescriptor            string    `json:"external_descriptor"`              // External chain output descriptor
-	InternalDescriptor            string    `json:"internal_descriptor"`              // Internal chain output descriptor
-	ExtendedPublicKey             string    `json:"extended_public_key"`              // Extended public key serialized with standard HD version bytes
-	SLIP32ExtendedPublicKey       string    `json:"slip32_extended_public_key"`       // Extended public key serialized with SLIP-0132 HD version bytes
-	ExternalXPub                  string    `json:"external_xpub"`                    // External chain extended public key at HD tree depth 4
-	MaxConsecutiveExternalIndex   uint32    `json:"max_consecutive_external_index"`   // Max consecutive index (without any gap) on the external chain
-	InternalXPub                  string    `json:"internal_xpub"`                    // Internal chain extended public key at HD tree depth 4
-	MaxConsecutiveInternalIndex   uint32    `json:"max_consecutive_internal_index"`   // Max consecutive index (without any gap) on the internal chain
-	LookaheadSize                 uint32    `json:"lookahead_size"`                   // Numerical size of the lookahead zone
-	Scheme                        Scheme    `json:"scheme"`                           // String identifier for keychain scheme
-	Network                       Network   `json:"network"`                          // String denoting the network to use for encoding addresses
-	NonConsecutiveExternalIndexes []uint32  `json:"non_consecutive_external_indexes"` // Used external indexes that are creating a gap in the derivation
-	NonConsecutiveInternalIndexes []uint32  `json:"non_consecutive_internal_indexes"` // Used internal indexes that are creating a gap in the derivation
+	ID                            uuid.UUID        `json:"id"`                               // Keychain ID as a uuid.UUID type
+	ExternalDescriptor            string           `json:"external_descriptor"`              // External chain output descriptor
+	InternalDescriptor            string           `json:"internal_descriptor"`              // Internal chain output descriptor
+	ExtendedPublicKey             string           `json:"extended_public_key"`              // Extended public key serialized with standard HD version bytes
+	SLIP32ExtendedPublicKey       string           `json:"slip32_extended_public_key"`       // Extended public key serialized with SLIP-0132 HD version bytes
+	ExternalXPub                  string           `json:"external_xpub"`                    // External chain extended public key at HD tree depth 4
+	MaxConsecutiveExternalIndex   uint32           `json:"max_consecutive_external_index"`   // Max consecutive index (without any gap) on the external chain
+	InternalXPub                  string           `json:"internal_xpub"`                    // Internal chain extended public key at HD tree depth 4
+	MaxConsecutiveInternalIndex   uint32           `json:"max_consecutive_internal_index"`   // Max consecutive index (without any gap) on the internal chain
+	LookaheadSize                 uint32           `json:"lookahead_size"`                   // Numerical size of the lookahead zone
+	Scheme                        Scheme           `json:"scheme"`                           // String identifier for keychain scheme
+	Network                       chaincfg.Network `json:"network"`                          // String denoting the network to use for encoding addresses
+	NonConsecutiveExternalIndexes []uint32         `json:"non_consecutive_external_indexes"` // Used external indexes that are creating a gap in the derivation
+	NonConsecutiveInternalIndexes []uint32         `json:"non_consecutive_internal_indexes"` // Used internal indexes that are creating a gap in the derivation
 }
 
 // Schema is a map between keychain ID and the keystore information.

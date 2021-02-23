@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/ledgerhq/bitcoin-keychain/pb/bitcoin"
+	"github.com/ledgerhq/bitcoin-keychain/pkg/chaincfg"
 )
 
 // DerivationPath represents the BIP32 derivation path as an array, relative
@@ -81,7 +82,7 @@ func childKDF(client bitcoin.CoinServiceClient, xPub string, childIndex uint32) 
 
 // GetAccountExtendedKey is a helper to get extendend key from
 // a public key, a chain code, an account index and a chain params.
-func GetAccountExtendedKey(client bitcoin.CoinServiceClient, net Network, request *FromChainCode) (*bitcoin.GetAccountExtendedKeyResponse, error) {
+func GetAccountExtendedKey(client bitcoin.CoinServiceClient, net chaincfg.Network, request *FromChainCode) (*bitcoin.GetAccountExtendedKeyResponse, error) {
 	chainParams, err := ChainParams(net)
 
 	if err != nil {

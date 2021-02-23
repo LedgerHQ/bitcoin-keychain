@@ -10,9 +10,9 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/pkg/errors"
-
 	"github.com/ledgerhq/bitcoin-keychain/pb/bitcoin"
+	"github.com/ledgerhq/bitcoin-keychain/pkg/chaincfg"
+	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 )
 
@@ -97,7 +97,7 @@ func TestInMemoryKeystore_GetCreate(t *testing.T) {
 		extendedKey   string
 		fromChainCode *FromChainCode
 		scheme        Scheme
-		network       Network
+		network       chaincfg.Network
 		want          KeychainInfo
 		wantErr       error
 	}{
@@ -105,7 +105,7 @@ func TestInMemoryKeystore_GetCreate(t *testing.T) {
 			name:        "native segwit",
 			extendedKey: "xpub1111",
 			scheme:      BIP84,
-			network:     Mainnet,
+			network:     chaincfg.BitcoinMainnet,
 			want: KeychainInfo{
 				ExternalDescriptor:          "wpkh(xpub1111/0/*)",
 				InternalDescriptor:          "wpkh(xpub1111/1/*)",
@@ -117,14 +117,14 @@ func TestInMemoryKeystore_GetCreate(t *testing.T) {
 				MaxConsecutiveInternalIndex: 0,
 				LookaheadSize:               20,
 				Scheme:                      "BIP84",
-				Network:                     Mainnet,
+				Network:                     chaincfg.BitcoinMainnet,
 			},
 		},
 		{
 			name:          "native segwit (from chain code)",
 			fromChainCode: &FromChainCode{},
 			scheme:        BIP84,
-			network:       Mainnet,
+			network:       chaincfg.BitcoinMainnet,
 			want: KeychainInfo{
 				ExternalDescriptor:          "wpkh(xpub1111/0/*)",
 				InternalDescriptor:          "wpkh(xpub1111/1/*)",
@@ -136,7 +136,7 @@ func TestInMemoryKeystore_GetCreate(t *testing.T) {
 				MaxConsecutiveInternalIndex: 0,
 				LookaheadSize:               20,
 				Scheme:                      "BIP84",
-				Network:                     Mainnet,
+				Network:                     chaincfg.BitcoinMainnet,
 			},
 		},
 	}
@@ -198,7 +198,7 @@ func TestInMemoryKeystore_GetFreshAddress(t *testing.T) {
 		extendedKey string
 		scheme      Scheme
 		change      Change
-		network     Network
+		network     chaincfg.Network
 		want        *AddressInfo
 		wantErr     error
 	}{
@@ -207,8 +207,8 @@ func TestInMemoryKeystore_GetFreshAddress(t *testing.T) {
 			extendedKey: "xpub1111",
 			scheme:      BIP84,
 			change:      External,
-			network:     Mainnet,
-			want:        &AddressInfo{Address: "deadbeef00-BIP84-mainnet", Derivation: DerivationPath{0, 0}, Change: External},
+			network:     chaincfg.BitcoinMainnet,
+			want:        &AddressInfo{Address: "deadbeef00-BIP84-bitcoin_mainnet", Derivation: DerivationPath{0, 0}, Change: External},
 		},
 	}
 	for _, tt := range tests {
@@ -249,7 +249,7 @@ func TestInMemoryKeystore_GetFreshAddresses(t *testing.T) {
 		extendedKey string
 		change      Change
 		scheme      Scheme
-		network     Network
+		network     chaincfg.Network
 		size        uint32
 		want        []AddressInfo
 		wantErr     error
@@ -259,7 +259,7 @@ func TestInMemoryKeystore_GetFreshAddresses(t *testing.T) {
 			extendedKey: "xpub1111",
 			scheme:      BIP84,
 			change:      External,
-			network:     Mainnet,
+			network:     chaincfg.BitcoinMainnet,
 			size:        0,
 			want:        []AddressInfo{},
 		},
@@ -268,14 +268,14 @@ func TestInMemoryKeystore_GetFreshAddresses(t *testing.T) {
 			extendedKey: "xpub1111",
 			scheme:      BIP84,
 			change:      External,
-			network:     Mainnet,
+			network:     chaincfg.BitcoinMainnet,
 			size:        5,
 			want: []AddressInfo{
-				{Address: "deadbeef00-BIP84-mainnet", Derivation: DerivationPath{0, 0}, Change: External},
-				{Address: "deadbeef01-BIP84-mainnet", Derivation: DerivationPath{0, 1}, Change: External},
-				{Address: "deadbeef02-BIP84-mainnet", Derivation: DerivationPath{0, 2}, Change: External},
-				{Address: "deadbeef03-BIP84-mainnet", Derivation: DerivationPath{0, 3}, Change: External},
-				{Address: "deadbeef04-BIP84-mainnet", Derivation: DerivationPath{0, 4}, Change: External},
+				{Address: "deadbeef00-BIP84-bitcoin_mainnet", Derivation: DerivationPath{0, 0}, Change: External},
+				{Address: "deadbeef01-BIP84-bitcoin_mainnet", Derivation: DerivationPath{0, 1}, Change: External},
+				{Address: "deadbeef02-BIP84-bitcoin_mainnet", Derivation: DerivationPath{0, 2}, Change: External},
+				{Address: "deadbeef03-BIP84-bitcoin_mainnet", Derivation: DerivationPath{0, 3}, Change: External},
+				{Address: "deadbeef04-BIP84-bitcoin_mainnet", Derivation: DerivationPath{0, 4}, Change: External},
 			},
 		},
 	}
@@ -315,7 +315,7 @@ func TestInMemoryKeystore_MarkPathAsUsed(t *testing.T) {
 	keystore := NewMockInMemoryKeystore()
 
 	info, err := keystore.Create(
-		"xpub1111", nil, BIP84, Mainnet, DefaultLookaheadSize)
+		"xpub1111", nil, BIP84, chaincfg.BitcoinMainnet, DefaultLookaheadSize)
 	if err != nil {
 		panic(err)
 	}
@@ -335,13 +335,13 @@ func TestInMemoryKeystore_MarkPathAsUsed(t *testing.T) {
 			change: External,
 			size:   5,
 			wantFreshAddresses: []AddressInfo{
-				{Address: "deadbeef01-BIP84-mainnet", Derivation: DerivationPath{0, 1}, Change: External}, // should have no gaps
-				{Address: "deadbeef02-BIP84-mainnet", Derivation: DerivationPath{0, 2}, Change: External},
-				{Address: "deadbeef03-BIP84-mainnet", Derivation: DerivationPath{0, 3}, Change: External},
-				{Address: "deadbeef04-BIP84-mainnet", Derivation: DerivationPath{0, 4}, Change: External},
-				{Address: "deadbeef05-BIP84-mainnet", Derivation: DerivationPath{0, 5}, Change: External},
+				{Address: "deadbeef01-BIP84-bitcoin_mainnet", Derivation: DerivationPath{0, 1}, Change: External}, // should have no gaps
+				{Address: "deadbeef02-BIP84-bitcoin_mainnet", Derivation: DerivationPath{0, 2}, Change: External},
+				{Address: "deadbeef03-BIP84-bitcoin_mainnet", Derivation: DerivationPath{0, 3}, Change: External},
+				{Address: "deadbeef04-BIP84-bitcoin_mainnet", Derivation: DerivationPath{0, 4}, Change: External},
+				{Address: "deadbeef05-BIP84-bitcoin_mainnet", Derivation: DerivationPath{0, 5}, Change: External},
 			},
-			wantFreshAddress: &AddressInfo{Address: "deadbeef01-BIP84-mainnet", Derivation: DerivationPath{0, 1}, Change: External},
+			wantFreshAddress: &AddressInfo{Address: "deadbeef01-BIP84-bitcoin_mainnet", Derivation: DerivationPath{0, 1}, Change: External},
 		},
 		{
 			name:   "mark 0/2 as used",
@@ -349,13 +349,13 @@ func TestInMemoryKeystore_MarkPathAsUsed(t *testing.T) {
 			change: External,
 			size:   5,
 			wantFreshAddresses: []AddressInfo{
-				{Address: "deadbeef01-BIP84-mainnet", Derivation: DerivationPath{0, 1}, Change: External}, // should detect the gap
-				{Address: "deadbeef03-BIP84-mainnet", Derivation: DerivationPath{0, 3}, Change: External},
-				{Address: "deadbeef04-BIP84-mainnet", Derivation: DerivationPath{0, 4}, Change: External},
-				{Address: "deadbeef05-BIP84-mainnet", Derivation: DerivationPath{0, 5}, Change: External},
-				{Address: "deadbeef06-BIP84-mainnet", Derivation: DerivationPath{0, 6}, Change: External},
+				{Address: "deadbeef01-BIP84-bitcoin_mainnet", Derivation: DerivationPath{0, 1}, Change: External}, // should detect the gap
+				{Address: "deadbeef03-BIP84-bitcoin_mainnet", Derivation: DerivationPath{0, 3}, Change: External},
+				{Address: "deadbeef04-BIP84-bitcoin_mainnet", Derivation: DerivationPath{0, 4}, Change: External},
+				{Address: "deadbeef05-BIP84-bitcoin_mainnet", Derivation: DerivationPath{0, 5}, Change: External},
+				{Address: "deadbeef06-BIP84-bitcoin_mainnet", Derivation: DerivationPath{0, 6}, Change: External},
 			},
-			wantFreshAddress: &AddressInfo{Address: "deadbeef01-BIP84-mainnet", Derivation: DerivationPath{0, 1}, Change: External},
+			wantFreshAddress: &AddressInfo{Address: "deadbeef01-BIP84-bitcoin_mainnet", Derivation: DerivationPath{0, 1}, Change: External},
 		},
 		{
 			name:   "mark 0/1 as used",
@@ -363,13 +363,13 @@ func TestInMemoryKeystore_MarkPathAsUsed(t *testing.T) {
 			change: External,
 			size:   5,
 			wantFreshAddresses: []AddressInfo{
-				{Address: "deadbeef03-BIP84-mainnet", Derivation: DerivationPath{0, 3}, Change: External}, // should have no gaps
-				{Address: "deadbeef04-BIP84-mainnet", Derivation: DerivationPath{0, 4}, Change: External},
-				{Address: "deadbeef05-BIP84-mainnet", Derivation: DerivationPath{0, 5}, Change: External},
-				{Address: "deadbeef06-BIP84-mainnet", Derivation: DerivationPath{0, 6}, Change: External},
-				{Address: "deadbeef07-BIP84-mainnet", Derivation: DerivationPath{0, 7}, Change: External},
+				{Address: "deadbeef03-BIP84-bitcoin_mainnet", Derivation: DerivationPath{0, 3}, Change: External}, // should have no gaps
+				{Address: "deadbeef04-BIP84-bitcoin_mainnet", Derivation: DerivationPath{0, 4}, Change: External},
+				{Address: "deadbeef05-BIP84-bitcoin_mainnet", Derivation: DerivationPath{0, 5}, Change: External},
+				{Address: "deadbeef06-BIP84-bitcoin_mainnet", Derivation: DerivationPath{0, 6}, Change: External},
+				{Address: "deadbeef07-BIP84-bitcoin_mainnet", Derivation: DerivationPath{0, 7}, Change: External},
 			},
-			wantFreshAddress: &AddressInfo{Address: "deadbeef03-BIP84-mainnet", Derivation: DerivationPath{0, 3}, Change: External},
+			wantFreshAddress: &AddressInfo{Address: "deadbeef03-BIP84-bitcoin_mainnet", Derivation: DerivationPath{0, 3}, Change: External},
 		},
 		{
 			// internal chain should be unaffected by previous mutations
@@ -378,13 +378,13 @@ func TestInMemoryKeystore_MarkPathAsUsed(t *testing.T) {
 			change: Internal,
 			size:   5,
 			wantFreshAddresses: []AddressInfo{
-				{Address: "deadbeef01-BIP84-mainnet", Derivation: DerivationPath{1, 1}, Change: Internal},
-				{Address: "deadbeef02-BIP84-mainnet", Derivation: DerivationPath{1, 2}, Change: Internal},
-				{Address: "deadbeef03-BIP84-mainnet", Derivation: DerivationPath{1, 3}, Change: Internal},
-				{Address: "deadbeef04-BIP84-mainnet", Derivation: DerivationPath{1, 4}, Change: Internal},
-				{Address: "deadbeef05-BIP84-mainnet", Derivation: DerivationPath{1, 5}, Change: Internal},
+				{Address: "deadbeef01-BIP84-bitcoin_mainnet", Derivation: DerivationPath{1, 1}, Change: Internal},
+				{Address: "deadbeef02-BIP84-bitcoin_mainnet", Derivation: DerivationPath{1, 2}, Change: Internal},
+				{Address: "deadbeef03-BIP84-bitcoin_mainnet", Derivation: DerivationPath{1, 3}, Change: Internal},
+				{Address: "deadbeef04-BIP84-bitcoin_mainnet", Derivation: DerivationPath{1, 4}, Change: Internal},
+				{Address: "deadbeef05-BIP84-bitcoin_mainnet", Derivation: DerivationPath{1, 5}, Change: Internal},
 			},
-			wantFreshAddress: &AddressInfo{Address: "deadbeef01-BIP84-mainnet", Derivation: DerivationPath{1, 1}, Change: Internal},
+			wantFreshAddress: &AddressInfo{Address: "deadbeef01-BIP84-bitcoin_mainnet", Derivation: DerivationPath{1, 1}, Change: Internal},
 		},
 		{
 			name:   "mark 1/3 as used",
@@ -392,13 +392,13 @@ func TestInMemoryKeystore_MarkPathAsUsed(t *testing.T) {
 			change: Internal,
 			size:   5,
 			wantFreshAddresses: []AddressInfo{
-				{Address: "deadbeef01-BIP84-mainnet", Derivation: DerivationPath{1, 1}, Change: Internal},
-				{Address: "deadbeef02-BIP84-mainnet", Derivation: DerivationPath{1, 2}, Change: Internal},
-				{Address: "deadbeef04-BIP84-mainnet", Derivation: DerivationPath{1, 4}, Change: Internal},
-				{Address: "deadbeef05-BIP84-mainnet", Derivation: DerivationPath{1, 5}, Change: Internal},
-				{Address: "deadbeef06-BIP84-mainnet", Derivation: DerivationPath{1, 6}, Change: Internal},
+				{Address: "deadbeef01-BIP84-bitcoin_mainnet", Derivation: DerivationPath{1, 1}, Change: Internal},
+				{Address: "deadbeef02-BIP84-bitcoin_mainnet", Derivation: DerivationPath{1, 2}, Change: Internal},
+				{Address: "deadbeef04-BIP84-bitcoin_mainnet", Derivation: DerivationPath{1, 4}, Change: Internal},
+				{Address: "deadbeef05-BIP84-bitcoin_mainnet", Derivation: DerivationPath{1, 5}, Change: Internal},
+				{Address: "deadbeef06-BIP84-bitcoin_mainnet", Derivation: DerivationPath{1, 6}, Change: Internal},
 			},
-			wantFreshAddress: &AddressInfo{Address: "deadbeef01-BIP84-mainnet", Derivation: DerivationPath{1, 1}, Change: Internal},
+			wantFreshAddress: &AddressInfo{Address: "deadbeef01-BIP84-bitcoin_mainnet", Derivation: DerivationPath{1, 1}, Change: Internal},
 		},
 		{
 			name:   "mark 1/6 as used",
@@ -406,13 +406,13 @@ func TestInMemoryKeystore_MarkPathAsUsed(t *testing.T) {
 			change: Internal,
 			size:   5,
 			wantFreshAddresses: []AddressInfo{
-				{Address: "deadbeef01-BIP84-mainnet", Derivation: DerivationPath{1, 1}, Change: Internal},
-				{Address: "deadbeef02-BIP84-mainnet", Derivation: DerivationPath{1, 2}, Change: Internal},
-				{Address: "deadbeef04-BIP84-mainnet", Derivation: DerivationPath{1, 4}, Change: Internal},
-				{Address: "deadbeef05-BIP84-mainnet", Derivation: DerivationPath{1, 5}, Change: Internal},
-				{Address: "deadbeef07-BIP84-mainnet", Derivation: DerivationPath{1, 7}, Change: Internal},
+				{Address: "deadbeef01-BIP84-bitcoin_mainnet", Derivation: DerivationPath{1, 1}, Change: Internal},
+				{Address: "deadbeef02-BIP84-bitcoin_mainnet", Derivation: DerivationPath{1, 2}, Change: Internal},
+				{Address: "deadbeef04-BIP84-bitcoin_mainnet", Derivation: DerivationPath{1, 4}, Change: Internal},
+				{Address: "deadbeef05-BIP84-bitcoin_mainnet", Derivation: DerivationPath{1, 5}, Change: Internal},
+				{Address: "deadbeef07-BIP84-bitcoin_mainnet", Derivation: DerivationPath{1, 7}, Change: Internal},
 			},
-			wantFreshAddress: &AddressInfo{Address: "deadbeef01-BIP84-mainnet", Derivation: DerivationPath{1, 1}, Change: Internal},
+			wantFreshAddress: &AddressInfo{Address: "deadbeef01-BIP84-bitcoin_mainnet", Derivation: DerivationPath{1, 1}, Change: Internal},
 		},
 		{
 			name:   "mark 1/1 as used",
@@ -420,13 +420,13 @@ func TestInMemoryKeystore_MarkPathAsUsed(t *testing.T) {
 			change: Internal,
 			size:   5,
 			wantFreshAddresses: []AddressInfo{
-				{Address: "deadbeef02-BIP84-mainnet", Derivation: DerivationPath{1, 2}, Change: Internal},
-				{Address: "deadbeef04-BIP84-mainnet", Derivation: DerivationPath{1, 4}, Change: Internal},
-				{Address: "deadbeef05-BIP84-mainnet", Derivation: DerivationPath{1, 5}, Change: Internal},
-				{Address: "deadbeef07-BIP84-mainnet", Derivation: DerivationPath{1, 7}, Change: Internal},
-				{Address: "deadbeef08-BIP84-mainnet", Derivation: DerivationPath{1, 8}, Change: Internal},
+				{Address: "deadbeef02-BIP84-bitcoin_mainnet", Derivation: DerivationPath{1, 2}, Change: Internal},
+				{Address: "deadbeef04-BIP84-bitcoin_mainnet", Derivation: DerivationPath{1, 4}, Change: Internal},
+				{Address: "deadbeef05-BIP84-bitcoin_mainnet", Derivation: DerivationPath{1, 5}, Change: Internal},
+				{Address: "deadbeef07-BIP84-bitcoin_mainnet", Derivation: DerivationPath{1, 7}, Change: Internal},
+				{Address: "deadbeef08-BIP84-bitcoin_mainnet", Derivation: DerivationPath{1, 8}, Change: Internal},
 			},
-			wantFreshAddress: &AddressInfo{Address: "deadbeef02-BIP84-mainnet", Derivation: DerivationPath{1, 2}, Change: Internal},
+			wantFreshAddress: &AddressInfo{Address: "deadbeef02-BIP84-bitcoin_mainnet", Derivation: DerivationPath{1, 2}, Change: Internal},
 		},
 	}
 
@@ -465,7 +465,7 @@ func TestInMemoryKeystore_GetAddressesPublicKeys(t *testing.T) {
 		extendedKey string
 		change      Change
 		scheme      Scheme
-		network     Network
+		network     chaincfg.Network
 		size        uint32
 		derivations []DerivationPath
 		want        []string
@@ -476,7 +476,7 @@ func TestInMemoryKeystore_GetAddressesPublicKeys(t *testing.T) {
 			extendedKey: "xpub1111",
 			change:      External,
 			scheme:      BIP84,
-			network:     Mainnet,
+			network:     chaincfg.BitcoinMainnet,
 			size:        5,
 			derivations: []DerivationPath{
 				{0, 0},
@@ -499,7 +499,7 @@ func TestInMemoryKeystore_GetAddressesPublicKeys(t *testing.T) {
 			extendedKey: "xpub1111",
 			change:      Internal,
 			scheme:      BIP84,
-			network:     Mainnet,
+			network:     chaincfg.BitcoinMainnet,
 			size:        5,
 			derivations: []DerivationPath{
 				{1, 0},
@@ -521,7 +521,7 @@ func TestInMemoryKeystore_GetAddressesPublicKeys(t *testing.T) {
 			extendedKey: "xpub1111",
 			change:      Internal,
 			scheme:      BIP84,
-			network:     Mainnet,
+			network:     chaincfg.BitcoinMainnet,
 			size:        5,
 			derivations: []DerivationPath{
 				{1, 0},
@@ -575,7 +575,7 @@ func TestInMemoryKeystore_Reset(t *testing.T) {
 	keystore := NewMockInMemoryKeystore()
 
 	info, err := keystore.Create(
-		"xpub1111", nil, BIP84, Mainnet, DefaultLookaheadSize)
+		"xpub1111", nil, BIP84, chaincfg.BitcoinMainnet, DefaultLookaheadSize)
 	if err != nil {
 		panic(err)
 	}
@@ -592,8 +592,8 @@ func TestInMemoryKeystore_Reset(t *testing.T) {
 			name:                        "mark 0/0 as used then reset",
 			path:                        DerivationPath{0, 0},
 			change:                      External,
-			wantFreshAddressBeforeReset: &AddressInfo{Address: "deadbeef01-BIP84-mainnet", Derivation: DerivationPath{0, 1}, Change: External},
-			wantFreshAddressAfterReset:  &AddressInfo{Address: "deadbeef00-BIP84-mainnet", Derivation: DerivationPath{0, 0}, Change: External},
+			wantFreshAddressBeforeReset: &AddressInfo{Address: "deadbeef01-BIP84-bitcoin_mainnet", Derivation: DerivationPath{0, 1}, Change: External},
+			wantFreshAddressAfterReset:  &AddressInfo{Address: "deadbeef00-BIP84-bitcoin_mainnet", Derivation: DerivationPath{0, 0}, Change: External},
 		},
 	}
 

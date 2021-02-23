@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/ledgerhq/bitcoin-keychain/log"
 	"github.com/ledgerhq/bitcoin-keychain/pb/bitcoin"
+	"github.com/ledgerhq/bitcoin-keychain/pkg/chaincfg"
 	"github.com/pkg/errors"
 )
 
@@ -91,7 +92,7 @@ func (s *RedisKeystore) Reset(id uuid.UUID) error {
 // Only initial state is populated, so no addresses will be inserted into the
 // keystore by this method.
 func (s *RedisKeystore) Create(
-	extendedPublicKey string, fromChainCode *FromChainCode, scheme Scheme, net Network, lookaheadSize uint32,
+	extendedPublicKey string, fromChainCode *FromChainCode, scheme Scheme, net chaincfg.Network, lookaheadSize uint32,
 ) (KeychainInfo, error) {
 	if fromChainCode != nil {
 		res, err := GetAccountExtendedKey(s.client, net, fromChainCode)

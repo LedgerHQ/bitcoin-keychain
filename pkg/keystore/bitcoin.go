@@ -6,9 +6,9 @@ import (
 	"fmt"
 
 	"github.com/ledgerhq/bitcoin-keychain/log"
-	"github.com/pkg/errors"
-
 	"github.com/ledgerhq/bitcoin-keychain/pb/bitcoin"
+	"github.com/ledgerhq/bitcoin-keychain/pkg/chaincfg"
+	"github.com/pkg/errors"
 )
 
 // protoEncodingFromScheme is a helper to convert a Scheme from keystore
@@ -45,27 +45,27 @@ func schemeFromProtoEncoding(encoding bitcoin.AddressEncoding) (Scheme, error) {
 
 // ChainParams is a helper to convert a Network in keystore package to
 // the corresponding *bitcoin.ChainParams value in bitcoin-lib-grpc.
-func ChainParams(net Network) (*bitcoin.ChainParams, error) {
+func ChainParams(net chaincfg.Network) (*bitcoin.ChainParams, error) {
 	switch net {
-	case Mainnet:
+	case chaincfg.BitcoinMainnet:
 		return &bitcoin.ChainParams{
 			Network: &bitcoin.ChainParams_BitcoinNetwork{
 				BitcoinNetwork: bitcoin.BitcoinNetwork_BITCOIN_NETWORK_MAINNET,
 			},
 		}, nil
-	case Testnet3:
+	case chaincfg.BitcoinTestnet3:
 		return &bitcoin.ChainParams{
 			Network: &bitcoin.ChainParams_BitcoinNetwork{
 				BitcoinNetwork: bitcoin.BitcoinNetwork_BITCOIN_NETWORK_TESTNET3,
 			},
 		}, nil
-	case Regtest:
+	case chaincfg.BitcoinRegtest:
 		return &bitcoin.ChainParams{
 			Network: &bitcoin.ChainParams_BitcoinNetwork{
 				BitcoinNetwork: bitcoin.BitcoinNetwork_BITCOIN_NETWORK_REGTEST,
 			},
 		}, nil
-	case LitecoinMainnet:
+	case chaincfg.LitecoinMainnet:
 		return &bitcoin.ChainParams{
 			Network: &bitcoin.ChainParams_LitecoinNetwork{
 				LitecoinNetwork: bitcoin.LitecoinNetwork_LITECOIN_NETWORK_MAINNET,
@@ -78,19 +78,19 @@ func ChainParams(net Network) (*bitcoin.ChainParams, error) {
 
 // networkFromChainParams is a helper to convert chain params from bitcoin-lib-grpc
 // to the corresponding Network in keystore package.
-func networkFromChainParams(params *bitcoin.ChainParams) (Network, error) {
+func networkFromChainParams(params *bitcoin.ChainParams) (chaincfg.Network, error) {
 	switch net := params.GetBitcoinNetwork(); net {
 	case bitcoin.BitcoinNetwork_BITCOIN_NETWORK_MAINNET:
-		return Mainnet, nil
+		return chaincfg.BitcoinMainnet, nil
 	case bitcoin.BitcoinNetwork_BITCOIN_NETWORK_TESTNET3:
-		return Testnet3, nil
+		return chaincfg.BitcoinTestnet3, nil
 	case bitcoin.BitcoinNetwork_BITCOIN_NETWORK_REGTEST:
-		return Regtest, nil
+		return chaincfg.BitcoinRegtest, nil
 	}
 
 	switch net := params.GetLitecoinNetwork(); net {
 	case bitcoin.LitecoinNetwork_LITECOIN_NETWORK_MAINNET:
-		return LitecoinMainnet, nil
+		return chaincfg.LitecoinMainnet, nil
 	default:
 		return "", errors.Wrap(bitcoin.ErrUnrecognizedNetwork, fmt.Sprint(net))
 	}
@@ -102,14 +102,14 @@ func encodeAddress(
 	client bitcoin.CoinServiceClient,
 	publicKey []byte,
 	scheme Scheme,
-	net Network,
+	net chaincfg.Network,
 ) (string, error) {
 	encoding, err := protoEncodingFromScheme(scheme)
 	if err != nil {
 		return "", err
 	}
 
-	network, err := ChainParams(net)
+	chainParams, err := ChainParams(net)
 	if err != nil {
 		return "", err
 	}
@@ -118,7 +118,7 @@ func encodeAddress(
 		context.Background(), &bitcoin.EncodeAddressRequest{
 			PublicKey:   publicKey,
 			Encoding:    encoding,
-			ChainParams: network,
+			ChainParams: chainParams,
 		})
 	if err != nil {
 		return "", nil

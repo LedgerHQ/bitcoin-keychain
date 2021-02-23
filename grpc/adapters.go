@@ -5,11 +5,10 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-
-	"github.com/pkg/errors"
-
 	pb "github.com/ledgerhq/bitcoin-keychain/pb/keychain"
+	"github.com/ledgerhq/bitcoin-keychain/pkg/chaincfg"
 	"github.com/ledgerhq/bitcoin-keychain/pkg/keystore"
+	"github.com/pkg/errors"
 )
 
 // KeychainInfo is an adapter function to convert a keystore.KeychainInfo
@@ -53,19 +52,19 @@ func KeychainInfo(value keystore.KeychainInfo) (*pb.KeychainInfo, error) {
 
 // Network is an adapter function to convert a gRPC pb.BitcoinNetwork
 // to keystore.Network instance.
-func Network(params *pb.ChainParams) (keystore.Network, error) {
+func Network(params *pb.ChainParams) (chaincfg.Network, error) {
 	switch net := params.GetBitcoinNetwork(); net {
 	case pb.BitcoinNetwork_BITCOIN_NETWORK_MAINNET:
-		return keystore.Mainnet, nil
+		return chaincfg.BitcoinMainnet, nil
 	case pb.BitcoinNetwork_BITCOIN_NETWORK_TESTNET3:
-		return keystore.Testnet3, nil
+		return chaincfg.BitcoinTestnet3, nil
 	case pb.BitcoinNetwork_BITCOIN_NETWORK_REGTEST:
-		return keystore.Regtest, nil
+		return chaincfg.BitcoinRegtest, nil
 	}
 
 	switch net := params.GetLitecoinNetwork(); net {
 	case pb.LitecoinNetwork_LITECOIN_NETWORK_MAINNET:
-		return keystore.LitecoinMainnet, nil
+		return chaincfg.LitecoinMainnet, nil
 	default:
 		return "", errors.Wrap(ErrUnrecognizedNetwork, fmt.Sprint(net))
 	}
@@ -73,27 +72,27 @@ func Network(params *pb.ChainParams) (keystore.Network, error) {
 
 // ChainParams is a helper to convert a Network in keystore package to
 // the corresponding gRPC *pb.ChainParams value.
-func ChainParams(net keystore.Network) (*pb.ChainParams, error) {
+func ChainParams(net chaincfg.Network) (*pb.ChainParams, error) {
 	switch net {
-	case keystore.Mainnet:
+	case chaincfg.BitcoinMainnet:
 		return &pb.ChainParams{
 			Network: &pb.ChainParams_BitcoinNetwork{
 				BitcoinNetwork: pb.BitcoinNetwork_BITCOIN_NETWORK_MAINNET,
 			},
 		}, nil
-	case keystore.Testnet3:
+	case chaincfg.BitcoinTestnet3:
 		return &pb.ChainParams{
 			Network: &pb.ChainParams_BitcoinNetwork{
 				BitcoinNetwork: pb.BitcoinNetwork_BITCOIN_NETWORK_TESTNET3,
 			},
 		}, nil
-	case keystore.Regtest:
+	case chaincfg.BitcoinRegtest:
 		return &pb.ChainParams{
 			Network: &pb.ChainParams_BitcoinNetwork{
 				BitcoinNetwork: pb.BitcoinNetwork_BITCOIN_NETWORK_REGTEST,
 			},
 		}, nil
-	case keystore.LitecoinMainnet:
+	case chaincfg.LitecoinMainnet:
 		return &pb.ChainParams{
 			Network: &pb.ChainParams_LitecoinNetwork{
 				LitecoinNetwork: pb.LitecoinNetwork_LITECOIN_NETWORK_MAINNET,

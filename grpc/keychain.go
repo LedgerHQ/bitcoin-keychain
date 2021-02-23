@@ -5,9 +5,7 @@ import (
 	"fmt"
 
 	"github.com/go-redis/redis/v8"
-
 	"github.com/ledgerhq/bitcoin-keychain/log"
-
 	pb "github.com/ledgerhq/bitcoin-keychain/pb/keychain"
 	"github.com/ledgerhq/bitcoin-keychain/pkg/keystore"
 	"google.golang.org/protobuf/types/known/emptypb"
