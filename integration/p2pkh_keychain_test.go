@@ -18,7 +18,7 @@ func TestP2PKHKeychainTest(t *testing.T) {
 	info, err := client.CreateKeychain(ctx, &pb.CreateKeychainRequest{
 		Account:       &pb.CreateKeychainRequest_ExtendedPublicKey{ExtendedPublicKey: BitcoinMainnetP2PKH.ExtendedPublicKey},
 		LookaheadSize: 20,
-		Network:       BitcoinMainnetP2PKH.Network,
+		ChainParams:   BitcoinMainnetP2PKH.ChainParams,
 		Scheme:        BitcoinMainnetP2PKH.Scheme,
 	})
 
