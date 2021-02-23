@@ -28,17 +28,9 @@ func KeychainInfo(value keystore.KeychainInfo) (*pb.KeychainInfo, error) {
 		scheme = pb.Scheme_SCHEME_UNSPECIFIED
 	}
 
-	var network pb.BitcoinNetwork
-
-	switch value.Network {
-	case keystore.Mainnet:
-		network = pb.BitcoinNetwork_BITCOIN_NETWORK_MAINNET
-	case keystore.Testnet3:
-		network = pb.BitcoinNetwork_BITCOIN_NETWORK_TESTNET3
-	case keystore.Regtest:
-		network = pb.BitcoinNetwork_BITCOIN_NETWORK_REGTEST
-	default:
-		network = pb.BitcoinNetwork_BITCOIN_NETWORK_UNSPECIFIED
+	chainParams, err := ChainParams(value.Network)
+	if err != nil {
+		return nil, err
 	}
 
 	id, err := value.ID.MarshalBinary()
@@ -55,22 +47,60 @@ func KeychainInfo(value keystore.KeychainInfo) (*pb.KeychainInfo, error) {
 		Slip32ExtendedPublicKey: value.SLIP32ExtendedPublicKey,
 		LookaheadSize:           value.LookaheadSize,
 		Scheme:                  scheme,
-		Network:                 network,
+		ChainParams:             chainParams,
 	}, nil
 }
 
 // Network is an adapter function to convert a gRPC pb.BitcoinNetwork
 // to keystore.Network instance.
-func Network(params pb.BitcoinNetwork) (keystore.Network, error) {
-	switch params {
+func Network(params *pb.ChainParams) (keystore.Network, error) {
+	switch net := params.GetBitcoinNetwork(); net {
 	case pb.BitcoinNetwork_BITCOIN_NETWORK_MAINNET:
 		return keystore.Mainnet, nil
 	case pb.BitcoinNetwork_BITCOIN_NETWORK_TESTNET3:
 		return keystore.Testnet3, nil
 	case pb.BitcoinNetwork_BITCOIN_NETWORK_REGTEST:
 		return keystore.Regtest, nil
+	}
+
+	switch net := params.GetLitecoinNetwork(); net {
+	case pb.LitecoinNetwork_LITECOIN_NETWORK_MAINNET:
+		return keystore.LitecoinMainnet, nil
 	default:
-		return "", errors.Wrap(ErrUnrecognizedNetwork, fmt.Sprint(params))
+		return "", errors.Wrap(ErrUnrecognizedNetwork, fmt.Sprint(net))
+	}
+}
+
+// ChainParams is a helper to convert a Network in keystore package to
+// the corresponding gRPC *pb.ChainParams value.
+func ChainParams(net keystore.Network) (*pb.ChainParams, error) {
+	switch net {
+	case keystore.Mainnet:
+		return &pb.ChainParams{
+			Network: &pb.ChainParams_BitcoinNetwork{
+				BitcoinNetwork: pb.BitcoinNetwork_BITCOIN_NETWORK_MAINNET,
+			},
+		}, nil
+	case keystore.Testnet3:
+		return &pb.ChainParams{
+			Network: &pb.ChainParams_BitcoinNetwork{
+				BitcoinNetwork: pb.BitcoinNetwork_BITCOIN_NETWORK_TESTNET3,
+			},
+		}, nil
+	case keystore.Regtest:
+		return &pb.ChainParams{
+			Network: &pb.ChainParams_BitcoinNetwork{
+				BitcoinNetwork: pb.BitcoinNetwork_BITCOIN_NETWORK_REGTEST,
+			},
+		}, nil
+	case keystore.LitecoinMainnet:
+		return &pb.ChainParams{
+			Network: &pb.ChainParams_LitecoinNetwork{
+				LitecoinNetwork: pb.LitecoinNetwork_LITECOIN_NETWORK_MAINNET,
+			},
+		}, nil
+	default:
+		return nil, errors.Wrap(ErrUnrecognizedNetwork, fmt.Sprint(net))
 	}
 }
 

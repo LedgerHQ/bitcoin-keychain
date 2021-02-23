@@ -82,7 +82,7 @@ func childKDF(client bitcoin.CoinServiceClient, xPub string, childIndex uint32) 
 // GetAccountExtendedKey is a helper to get extendend key from
 // a public key, a chain code, an account index and a chain params.
 func GetAccountExtendedKey(client bitcoin.CoinServiceClient, net Network, request *FromChainCode) (*bitcoin.GetAccountExtendedKeyResponse, error) {
-	chainParams, err := bitcoinChainParams(net)
+	chainParams, err := ChainParams(net)
 
 	if err != nil {
 		return nil, err

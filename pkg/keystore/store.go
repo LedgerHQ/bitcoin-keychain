@@ -61,6 +61,9 @@ const (
 
 	// Regtest indicates the Bitcoin regression test network
 	Regtest Network = "regtest"
+
+	// LitecoinMainnet indicates the main Litecoin network
+	LitecoinMainnet Network = "litecoin_mainnet"
 )
 
 // KeychainInfo models the global information related to an account registered

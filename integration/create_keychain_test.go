@@ -86,7 +86,7 @@ func TestKeychainRegistration(t *testing.T) {
 			info, err := client.CreateKeychain(ctx, &pb.CreateKeychainRequest{
 				Account:       &pb.CreateKeychainRequest_ExtendedPublicKey{ExtendedPublicKey: tt.fixture.ExtendedPublicKey},
 				LookaheadSize: 20,
-				Network:       tt.fixture.Network,
+				ChainParams:   tt.fixture.ChainParams,
 				Scheme:        tt.fixture.Scheme,
 			})
 			if err != nil {
@@ -101,7 +101,7 @@ func TestKeychainRegistration(t *testing.T) {
 				Slip32ExtendedPublicKey: tt.fixture.ExtendedPublicKey,
 				LookaheadSize:           20,
 				Scheme:                  tt.fixture.Scheme,
-				Network:                 tt.fixture.Network,
+				ChainParams:             tt.fixture.ChainParams,
 			}
 
 			if !proto.Equal(info, wantKeychainInfo) {

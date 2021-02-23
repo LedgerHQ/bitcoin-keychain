@@ -43,25 +43,37 @@ func schemeFromProtoEncoding(encoding bitcoin.AddressEncoding) (Scheme, error) {
 	}
 }
 
-// bitcoinChainParams is a helper to convert a Network in keystore package to
+// ChainParams is a helper to convert a Network in keystore package to
 // the corresponding *bitcoin.ChainParams value in bitcoin-lib-grpc.
-func bitcoinChainParams(net Network) (*bitcoin.ChainParams, error) {
-	var network bitcoin.BitcoinNetwork
-
+func ChainParams(net Network) (*bitcoin.ChainParams, error) {
 	switch net {
 	case Mainnet:
-		network = bitcoin.BitcoinNetwork_BITCOIN_NETWORK_MAINNET
+		return &bitcoin.ChainParams{
+			Network: &bitcoin.ChainParams_BitcoinNetwork{
+				BitcoinNetwork: bitcoin.BitcoinNetwork_BITCOIN_NETWORK_MAINNET,
+			},
+		}, nil
 	case Testnet3:
-		network = bitcoin.BitcoinNetwork_BITCOIN_NETWORK_TESTNET3
+		return &bitcoin.ChainParams{
+			Network: &bitcoin.ChainParams_BitcoinNetwork{
+				BitcoinNetwork: bitcoin.BitcoinNetwork_BITCOIN_NETWORK_TESTNET3,
+			},
+		}, nil
 	case Regtest:
-		network = bitcoin.BitcoinNetwork_BITCOIN_NETWORK_REGTEST
+		return &bitcoin.ChainParams{
+			Network: &bitcoin.ChainParams_BitcoinNetwork{
+				BitcoinNetwork: bitcoin.BitcoinNetwork_BITCOIN_NETWORK_REGTEST,
+			},
+		}, nil
+	case LitecoinMainnet:
+		return &bitcoin.ChainParams{
+			Network: &bitcoin.ChainParams_LitecoinNetwork{
+				LitecoinNetwork: bitcoin.LitecoinNetwork_LITECOIN_NETWORK_MAINNET,
+			},
+		}, nil
 	default:
 		return nil, errors.Wrap(ErrUnrecognizedNetwork, fmt.Sprint(net))
 	}
-
-	return &bitcoin.ChainParams{
-		Network: &bitcoin.ChainParams_BitcoinNetwork{BitcoinNetwork: network},
-	}, nil
 }
 
 // networkFromChainParams is a helper to convert chain params from bitcoin-lib-grpc
@@ -74,6 +86,11 @@ func networkFromChainParams(params *bitcoin.ChainParams) (Network, error) {
 		return Testnet3, nil
 	case bitcoin.BitcoinNetwork_BITCOIN_NETWORK_REGTEST:
 		return Regtest, nil
+	}
+
+	switch net := params.GetLitecoinNetwork(); net {
+	case bitcoin.LitecoinNetwork_LITECOIN_NETWORK_MAINNET:
+		return LitecoinMainnet, nil
 	default:
 		return "", errors.Wrap(bitcoin.ErrUnrecognizedNetwork, fmt.Sprint(net))
 	}
@@ -92,7 +109,7 @@ func encodeAddress(
 		return "", err
 	}
 
-	network, err := bitcoinChainParams(net)
+	network, err := ChainParams(net)
 	if err != nil {
 		return "", err
 	}

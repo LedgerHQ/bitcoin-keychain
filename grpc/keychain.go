@@ -22,7 +22,7 @@ var store *keystore.RedisKeystore
 func (c Controller) CreateKeychain(
 	ctx context.Context, request *pb.CreateKeychainRequest,
 ) (*pb.KeychainInfo, error) {
-	net, err := Network(request.Network)
+	net, err := Network(request.ChainParams)
 	if err != nil {
 		return nil, err
 	}
