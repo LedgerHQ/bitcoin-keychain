@@ -52,7 +52,7 @@ var BitcoinMainnetP2WPKH = Fixture{
 	ExtendedPublicKey:  "xpub6CMeLkY9TzXyLYXPWMXB5LWtprVABb6HwPEPXnEgESMNrSUBsvhXNsA7zKS1ZRKhUyQG4HjZysEP8v7gDNU4J6PvN5yLx4meEm3mpEapLMN",
 	ChainParams: &pb.ChainParams{
 		Network: &pb.ChainParams_BitcoinNetwork{
-			BitcoinNetwork: pb.BitcoinNetwork_BITCOIN_NETWORK_TESTNET3,
+			BitcoinNetwork: pb.BitcoinNetwork_BITCOIN_NETWORK_MAINNET,
 		},
 	},
 	Scheme: pb.Scheme_SCHEME_BIP84,
