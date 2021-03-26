@@ -14,9 +14,10 @@ const (
 	entryPoint = "cmd/server.go"
 	ldFlags    = "-X $PACKAGE/version/version.commitHash=$COMMIT_HASH " +
 		"-X $PACKAGE/version/version.buildDate=$BUILD_DATE"
-	protoPlugins = "plugins=grpc"
-	protoFile    = "service.proto"
-	protoDir     = "pb/keychain"
+	protoPlugins  = "plugins=grpc"
+	protoDir      = "pb"
+	protoFileName = "keychain/service.proto"
+	protoArtifactModule = "github.com/ledgerhq/bitcoin-keychain/pb"
 )
 
 // Allow user to override executables on UNIX-like systems.
@@ -47,8 +48,10 @@ func init() {
 func Proto() error {
 	runner := func(proto string, dir string) error {
 		return sh.Run(protoc,
-			fmt.Sprintf("--go_out=%s:%s", protoPlugins, dir), // protoc flags
-			fmt.Sprintf("%s/%s", dir, proto))                 // input .proto
+			fmt.Sprintf("--go_out=%s:%s", protoPlugins, protoDir),  // protoc flags
+			fmt.Sprintf("%s/%s", protoDir, protoFileName),          // input .proto
+			fmt.Sprintf("--go_opt=module=%s", protoArtifactModule), // module output
+		)
 	}
 
 	if err := runner(protoFile, protoDir); err != nil {

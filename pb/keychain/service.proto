@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package pb.keychain;
-option go_package = ".;keychain";
+option go_package = "github.com/ledgerhq/bitcoin-keychain/pb/keychain";
 option java_package = "co.ledger.protobuf.bitcoin.keychain";
 
 import "google/protobuf/empty.proto";
