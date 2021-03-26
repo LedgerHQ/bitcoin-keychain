@@ -54,7 +54,7 @@ func Proto() error {
 		)
 	}
 
-	if err := runner(protoFile, protoDir); err != nil {
+	if err := runner(protoFileName, protoDir); err != nil {
 		return err
 	}
 
