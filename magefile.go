@@ -16,7 +16,8 @@ const (
 		"-X $PACKAGE/version/version.buildDate=$BUILD_DATE"
 	protoPlugins  = "plugins=grpc"
 	protoDir      = "pb"
-	protoFileName = "keychain/service.proto"
+	protoKeychainFileName = "keychain/service.proto"
+	protoGrpcClientFileName = "bitcoin/service.proto"
 	protoArtifactModule = "github.com/ledgerhq/bitcoin-keychain/pb"
 )
 
@@ -48,17 +49,17 @@ func init() {
 func Proto() error {
 	runner := func(proto string, dir string) error {
 		return sh.Run(protoc,
-			fmt.Sprintf("--go_out=%s:%s", protoPlugins, protoDir),  // protoc flags
-			fmt.Sprintf("%s/%s", protoDir, protoFileName),          // input .proto
+			fmt.Sprintf("--go_out=%s:%s", protoPlugins, dir),  // protoc flags
+			fmt.Sprintf("%s/%s", dir, proto),          // input .proto
 			fmt.Sprintf("--go_opt=module=%s", protoArtifactModule), // module output
 		)
 	}
 
-	if err := runner(protoFileName, protoDir); err != nil {
+	if err := runner(protoKeychainFileName, protoDir); err != nil {
 		return err
 	}
 
-	return runner("service.proto", "pb/bitcoin")
+	return runner(protoGrpcClientFileName, protoDir)
 }
 
 func Buf() error {
