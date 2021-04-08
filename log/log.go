@@ -57,21 +57,21 @@ func newLogrusLogger(cfg viper.Viper) *logrus.Logger {
 		level = logrus.DebugLevel
 	}
 
-	if(cfg.GetBool("json_logs")) {
+	if cfg.GetBool("json_logs") {
 		return &logrus.Logger{
 			Out:   os.Stderr,
 			Level: level,
 			Formatter: &logrus.JSONFormatter{
-				TimestampFormat:  "2006-01-02 15:04:05.100",
+				TimestampFormat: "2006-01-02 15:04:05.100",
 				FieldMap: logrus.FieldMap{
 					logrus.FieldKeyTime:  "@timestamp",
 					logrus.FieldKeyLevel: "@level",
 					logrus.FieldKeyMsg:   "@message",
 					logrus.FieldKeyFunc:  "@caller",
-			   },
+				},
 			},
 		}
-	} 
+	}
 
 	return &logrus.Logger{
 		Out:   os.Stderr,
