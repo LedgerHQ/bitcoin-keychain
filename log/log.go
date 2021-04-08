@@ -57,7 +57,7 @@ func newLogrusLogger(cfg viper.Viper) *logrus.Logger {
 		level = logrus.DebugLevel
 	}
 
-	if (cfg.GetBool("json_logs")) {
+	if(cfg.GetBool("json_logs")) {
 		return &logrus.Logger{
 			Out:   os.Stderr,
 			Level: level,
