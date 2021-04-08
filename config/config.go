@@ -17,7 +17,7 @@ func readViperConfig(appName string) *viper.Viper {
 	// global defaults
 
 	v.SetDefault("json_logs", true)
-	v.SetDefault("loglevel", "debug")
+	v.SetDefault("loglevel", "info")
 
 	return v
 }
