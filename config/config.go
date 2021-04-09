@@ -1,6 +1,8 @@
 package config
 
 import (
+	"os"
+
 	"github.com/spf13/viper"
 )
 
@@ -16,8 +18,20 @@ func readViperConfig(appName string) *viper.Viper {
 
 	// global defaults
 
-	v.SetDefault("json_logs", true)
-	v.SetDefault("loglevel", "info")
+	var logLevelEnv = os.Getenv("BITCOIN_KEYCHAIN_LOG_LEVEL")
+	var logLevel = "info"
+	if logLevelEnv != "" {
+		logLevel = logLevelEnv
+	}
+
+	var jsonLogsEnv = os.Getenv("BITCOIN_KEYCHAIN_JSON_LOGS")
+	var jsonLogs = true
+	if jsonLogsEnv == "false" {
+		jsonLogs = false
+	}
+
+	v.SetDefault("json_logs", jsonLogs)
+	v.SetDefault("loglevel", logLevel)
 
 	return v
 }
