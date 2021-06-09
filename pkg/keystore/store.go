@@ -361,10 +361,6 @@ func (m *Meta) ResetKeychainMeta() {
 	m.Addresses = map[string]DerivationPath{}
 }
 
-func keystoreReset(meta *Meta) {
-	meta.ResetKeychainMeta()
-}
-
 func keystoreCreate(
 	extendedPublicKey string,
 	fromChainCode *FromChainCode,
@@ -433,33 +429,22 @@ func keystoreCreate(
 	return meta, nil
 }
 
-func keystoreGetFreshAddress(s Keystore, id uuid.UUID, change Change) (*AddressInfo, error) {
-	addrs, err := s.GetFreshAddresses(id, change, 1)
-	if err != nil {
-		return nil, err
-	}
-
-	return &addrs[0], nil
-}
-
-func keystoreGetFreshAddresses(
-	meta Meta,
+func (m *Meta) keystoreGetFreshAddresses(
 	client bitcoin.CoinServiceClient,
 	id uuid.UUID,
 	change Change,
 	size uint32,
-) ([]AddressInfo, []Meta, error) {
+) ([]AddressInfo, error) {
 
 	addrs := []AddressInfo{}
-	changedMetas := []Meta{}
-	maxConsecutiveIndex, err := meta.MaxConsecutiveIndex(change)
+	maxConsecutiveIndex, err := m.MaxConsecutiveIndex(change)
 	if err != nil {
-		return addrs, changedMetas, err
+		return addrs, err
 	}
 
-	nonConsecutiveIndexes, err := meta.NonConsecutiveIndexes(change)
+	nonConsecutiveIndexes, err := m.NonConsecutiveIndexes(change)
 	if err != nil {
-		return nil, changedMetas, err
+		return nil, err
 	}
 
 	for i := uint32(0); uint32(len(addrs)) < size; i++ {
@@ -470,9 +455,9 @@ func keystoreGetFreshAddresses(
 		if !contains(nonConsecutiveIndexes, index) {
 			path := DerivationPath{uint32(change), index}
 
-			addr, err := deriveAddress(client, &meta, path)
+			addr, err := deriveAddress(client, m, path)
 			if err != nil {
-				return addrs, changedMetas, err
+				return addrs, err
 			}
 
 			addrInfo := AddressInfo{
@@ -482,21 +467,20 @@ func keystoreGetFreshAddresses(
 			}
 
 			addrs = append(addrs, addrInfo)
-			changedMetas = append(changedMetas, meta)
 		}
 	}
-	return addrs, changedMetas, nil
+	return addrs, nil
 }
 
-func keystoreMarkPathAsUsed(meta *Meta, id uuid.UUID, path DerivationPath) error {
+func (m *Meta) keystoreMarkPathAsUsed(path DerivationPath) error {
 	change := path.ChangeIndex()
 
-	maxConsecutiveIndex, err := meta.MaxConsecutiveIndex(change)
+	maxConsecutiveIndex, err := m.MaxConsecutiveIndex(change)
 	if err != nil {
 		return err
 	}
 
-	nonConsecutiveIndexes, err := meta.NonConsecutiveIndexes(change)
+	nonConsecutiveIndexes, err := m.NonConsecutiveIndexes(change)
 	if err != nil {
 		return err
 	}
@@ -526,7 +510,7 @@ func keystoreMarkPathAsUsed(meta *Meta, id uuid.UUID, path DerivationPath) error
 
 		// Save the max consecutive index. It is important to perform this step
 		// before saving the non-consecutive indexes.
-		if err := meta.SetMaxConsecutiveIndex(change, maxConsecutiveIndex); err != nil {
+		if err := m.SetMaxConsecutiveIndex(change, maxConsecutiveIndex); err != nil {
 			return err
 		}
 
@@ -535,7 +519,7 @@ func keystoreMarkPathAsUsed(meta *Meta, id uuid.UUID, path DerivationPath) error
 		//
 		// TODO: Implement a dedicated method for this reconciliation, since the
 		//       non-consecutive indexes are never changed until this step.
-		if err := meta.SetNonConsecutiveIndexes(change, nonConsecutiveIndexes); err != nil {
+		if err := m.SetNonConsecutiveIndexes(change, nonConsecutiveIndexes); err != nil {
 			return err
 		}
 
@@ -560,7 +544,7 @@ func keystoreMarkPathAsUsed(meta *Meta, id uuid.UUID, path DerivationPath) error
 			nonConsecutiveIndexes = append(
 				nonConsecutiveIndexes, path.AddressIndex())
 
-			err := meta.SetNonConsecutiveIndexes(change, nonConsecutiveIndexes)
+			err := m.SetNonConsecutiveIndexes(change, nonConsecutiveIndexes)
 			if err != nil {
 				return err
 			}
@@ -569,15 +553,14 @@ func keystoreMarkPathAsUsed(meta *Meta, id uuid.UUID, path DerivationPath) error
 	return nil
 }
 
-func keystoreGetAllObservableAddresses(
-	meta *Meta,
+func (m *Meta) keystoreGetAllObservableAddresses(
 	client bitcoin.CoinServiceClient,
 	id uuid.UUID,
 	change Change,
 	fromIndex uint32,
 	toIndex uint32,
 ) ([]AddressInfo, error) {
-	maxObservableIndex, err := meta.MaxObservableIndex(change)
+	maxObservableIndex, err := m.MaxObservableIndex(change)
 	if err != nil {
 		return nil, err
 	}
@@ -595,7 +578,7 @@ func keystoreGetAllObservableAddresses(
 	for i := fromIndex; i <= fromIndex+length; i++ {
 		path := DerivationPath{uint32(change), i}
 
-		addr, err := deriveAddress(client, meta, path)
+		addr, err := deriveAddress(client, m, path)
 		if err != nil {
 			return nil, err
 		}
@@ -612,8 +595,8 @@ func keystoreGetAllObservableAddresses(
 	return addrs, nil
 }
 
-func keystoreGetDerivationPath(meta Meta, id uuid.UUID, address string) (DerivationPath, error) {
-	path, ok := meta.Addresses[address]
+func (m *Meta) keystoreGetDerivationPath(address string) (DerivationPath, error) {
+	path, ok := m.Addresses[address]
 	if !ok {
 		return DerivationPath{}, ErrAddressNotFound
 	}
@@ -629,7 +612,7 @@ func keystoreMarkAddressAsUsed(s Keystore, id uuid.UUID, address string) error {
 	return s.MarkPathAsUsed(id, path)
 }
 
-func keystoreGetAddressesPublicKeys(meta Meta, id uuid.UUID, derivations []DerivationPath) ([]string, error) {
+func (meta *Meta) keystoreGetAddressesPublicKeys(derivations []DerivationPath) ([]string, error) {
 	publicKeys := make([]string, len(derivations))
 
 	for idx, derivation := range derivations {

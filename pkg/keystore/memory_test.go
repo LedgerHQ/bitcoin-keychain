@@ -86,7 +86,7 @@ func (c mockBitcoinClient) EncodeAddress(
 
 func NewMockInMemoryKeystore() Keystore {
 	return &InMemoryKeystore{
-		db:     Schema{},
+		db:     schema{},
 		client: mockBitcoinClient{},
 	}
 }

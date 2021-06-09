@@ -68,7 +68,7 @@ func (s *RedisKeystore) Reset(id uuid.UUID) error {
 		return ErrKeychainNotFound
 	}
 
-	keystoreReset(&meta)
+	meta.ResetKeychainMeta()
 
 	if err := set(s.db, id.String(), meta); err != nil {
 		return err
@@ -101,7 +101,11 @@ func (s *RedisKeystore) Create(
 }
 
 func (s *RedisKeystore) GetFreshAddress(id uuid.UUID, change Change) (*AddressInfo, error) {
-	return keystoreGetFreshAddress(s, id, change)
+	addrs, err := s.GetFreshAddresses(id, change, 1)
+	if err != nil {
+		return nil, err
+	}
+	return &addrs[0], err
 }
 
 func (s *RedisKeystore) GetFreshAddresses(
@@ -114,18 +118,16 @@ func (s *RedisKeystore) GetFreshAddresses(
 		return []AddressInfo{}, ErrKeychainNotFound
 	}
 
-	addrs, changedMetas, err := keystoreGetFreshAddresses(meta, s.client, id, change, size)
+	addrs, err := meta.keystoreGetFreshAddresses(s.client, id, change, size)
 	if err != nil {
 		return addrs, err
 	}
 
-	for _, meta := range changedMetas {
-		if err := set(s.db, id.String(), meta); err != nil {
-			return nil, err
-		}
+	if err := set(s.db, id.String(), meta); err != nil {
+		return nil, err
 	}
 
-	return addrs, err
+	return addrs, nil
 }
 
 func (s *RedisKeystore) MarkPathAsUsed(id uuid.UUID, path DerivationPath) error {
@@ -137,7 +139,7 @@ func (s *RedisKeystore) MarkPathAsUsed(id uuid.UUID, path DerivationPath) error 
 		return ErrKeychainNotFound
 	}
 
-	err = keystoreMarkPathAsUsed(&meta, id, path)
+	err = meta.keystoreMarkPathAsUsed(path)
 	if err != nil {
 		return err
 	}
@@ -155,8 +157,8 @@ func (s *RedisKeystore) GetAllObservableAddresses(
 		return nil, ErrKeychainNotFound
 	}
 
-	addrs, err := keystoreGetAllObservableAddresses(
-		&meta, s.client, id, change, fromIndex, toIndex,
+	addrs, err := meta.keystoreGetAllObservableAddresses(
+		s.client, id, change, fromIndex, toIndex,
 	)
 	if err != nil {
 		return addrs, err
@@ -178,7 +180,7 @@ func (s *RedisKeystore) GetDerivationPath(id uuid.UUID, address string) (Derivat
 		return DerivationPath{}, ErrKeychainNotFound
 	}
 
-	return keystoreGetDerivationPath(meta, id, address)
+	return meta.keystoreGetDerivationPath(address)
 }
 
 func (s *RedisKeystore) MarkAddressAsUsed(id uuid.UUID, address string) error {
@@ -211,5 +213,5 @@ func (s *RedisKeystore) GetAddressesPublicKeys(id uuid.UUID, derivations []Deriv
 		return nil, ErrKeychainNotFound
 	}
 
-	return keystoreGetAddressesPublicKeys(meta, id, derivations)
+	return meta.keystoreGetAddressesPublicKeys(derivations)
 }

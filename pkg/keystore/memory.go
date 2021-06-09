@@ -6,24 +6,24 @@ import (
 	"github.com/ledgerhq/bitcoin-keychain/pkg/chaincfg"
 )
 
+// Schema is a map between keychain ID and the keystore information.
+type schema map[uuid.UUID]*Meta
+
 // InMemoryKeystore implements the Keystore interface where the storage
 // is an in-memory map. Useful for unit-tests.
 //
 // It also includes a client to communicate with a bitcoin-lib-grpc gRPC server
 // for protocol-level operations.
 type InMemoryKeystore struct {
-	db     Schema
+	db     schema
 	client bitcoin.CoinServiceClient
 }
-
-// Schema is a map between keychain ID and the keystore information.
-type Schema map[uuid.UUID]*Meta
 
 // NewInMemoryKeystore returns an instance of InMemoryKeystore which implements
 // the Keystore interface.
 func NewInMemoryKeystore() Keystore {
 	return &InMemoryKeystore{
-		db:     Schema{},
+		db:     schema{},
 		client: bitcoin.NewBitcoinClient(),
 	}
 }
@@ -54,7 +54,7 @@ func (s *InMemoryKeystore) Reset(id uuid.UUID) error {
 		return ErrKeychainNotFound
 	}
 
-	keystoreReset(meta)
+	meta.ResetKeychainMeta()
 
 	return nil
 }
@@ -82,7 +82,11 @@ func (s *InMemoryKeystore) Create(
 }
 
 func (s InMemoryKeystore) GetFreshAddress(id uuid.UUID, change Change) (*AddressInfo, error) {
-	return keystoreGetFreshAddress(&s, id, change)
+	addrs, err := s.GetFreshAddresses(id, change, 1)
+	if err != nil {
+		return nil, err
+	}
+	return &addrs[0], err
 }
 
 func (s InMemoryKeystore) GetFreshAddresses(
@@ -94,7 +98,7 @@ func (s InMemoryKeystore) GetFreshAddresses(
 	if !ok {
 		return addrs, ErrKeychainNotFound
 	}
-	addrs, _, err := keystoreGetFreshAddresses(*meta, s.client, id, change, size)
+	addrs, err := meta.keystoreGetFreshAddresses(s.client, id, change, size)
 	if err != nil {
 		return addrs, err
 	}
@@ -109,7 +113,7 @@ func (s *InMemoryKeystore) MarkPathAsUsed(id uuid.UUID, path DerivationPath) err
 		return ErrKeychainNotFound
 	}
 
-	err := keystoreMarkPathAsUsed(meta, id, path) // meta is changed
+	err := meta.keystoreMarkPathAsUsed(path)
 	if err != nil {
 		return err
 	}
@@ -124,8 +128,8 @@ func (s *InMemoryKeystore) GetAllObservableAddresses(
 	if !ok {
 		return nil, ErrKeychainNotFound
 	}
-	return keystoreGetAllObservableAddresses(
-		meta, s.client, id, change, fromIndex, toIndex,
+	return meta.keystoreGetAllObservableAddresses(
+		s.client, id, change, fromIndex, toIndex,
 	)
 }
 
@@ -135,7 +139,7 @@ func (s InMemoryKeystore) GetDerivationPath(id uuid.UUID, address string) (Deriv
 		return DerivationPath{}, ErrKeychainNotFound
 	}
 
-	return keystoreGetDerivationPath(*meta, id, address)
+	return meta.keystoreGetDerivationPath(address)
 }
 
 func (s *InMemoryKeystore) MarkAddressAsUsed(id uuid.UUID, address string) error {
@@ -150,5 +154,5 @@ func (s *InMemoryKeystore) GetAddressesPublicKeys(id uuid.UUID, derivations []De
 		return nil, ErrKeychainNotFound
 	}
 
-	return keystoreGetAddressesPublicKeys(*meta, id, derivations)
+	return meta.keystoreGetAddressesPublicKeys(derivations)
 }
