@@ -62,7 +62,6 @@ func (s *InMemoryKeystore) Reset(id uuid.UUID) error {
 func (s *InMemoryKeystore) Create(
 	extendedPublicKey string, fromChainCode *FromChainCode, scheme Scheme, net chaincfg.Network, lookaheadSize uint32,
 ) (KeychainInfo, error) {
-
 	meta, err := keystoreCreate(
 		extendedPublicKey,
 		fromChainCode,
@@ -98,7 +97,7 @@ func (s InMemoryKeystore) GetFreshAddresses(
 	if !ok {
 		return addrs, ErrKeychainNotFound
 	}
-	addrs, err := meta.keystoreGetFreshAddresses(s.client, id, change, size)
+	addrs, err := meta.keystoreGetFreshAddresses(s.client, change, size)
 	if err != nil {
 		return addrs, err
 	}
@@ -129,7 +128,7 @@ func (s *InMemoryKeystore) GetAllObservableAddresses(
 		return nil, ErrKeychainNotFound
 	}
 	return meta.keystoreGetAllObservableAddresses(
-		s.client, id, change, fromIndex, toIndex,
+		s.client, change, fromIndex, toIndex,
 	)
 }
 

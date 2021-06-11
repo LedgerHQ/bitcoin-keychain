@@ -431,11 +431,9 @@ func keystoreCreate(
 
 func (m *Meta) keystoreGetFreshAddresses(
 	client bitcoin.CoinServiceClient,
-	id uuid.UUID,
 	change Change,
 	size uint32,
 ) ([]AddressInfo, error) {
-
 	addrs := []AddressInfo{}
 	maxConsecutiveIndex, err := m.MaxConsecutiveIndex(change)
 	if err != nil {
@@ -555,7 +553,6 @@ func (m *Meta) keystoreMarkPathAsUsed(path DerivationPath) error {
 
 func (m *Meta) keystoreGetAllObservableAddresses(
 	client bitcoin.CoinServiceClient,
-	id uuid.UUID,
 	change Change,
 	fromIndex uint32,
 	toIndex uint32,
@@ -612,11 +609,11 @@ func keystoreMarkAddressAsUsed(s Keystore, id uuid.UUID, address string) error {
 	return s.MarkPathAsUsed(id, path)
 }
 
-func (meta *Meta) keystoreGetAddressesPublicKeys(derivations []DerivationPath) ([]string, error) {
+func (m *Meta) keystoreGetAddressesPublicKeys(derivations []DerivationPath) ([]string, error) {
 	publicKeys := make([]string, len(derivations))
 
 	for idx, derivation := range derivations {
-		publicKey, ok := meta.Derivations[derivation]
+		publicKey, ok := m.Derivations[derivation]
 
 		if !ok {
 			return nil, ErrDerivationNotFound

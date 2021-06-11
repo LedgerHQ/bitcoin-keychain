@@ -118,7 +118,7 @@ func (s *RedisKeystore) GetFreshAddresses(
 		return []AddressInfo{}, ErrKeychainNotFound
 	}
 
-	addrs, err := meta.keystoreGetFreshAddresses(s.client, id, change, size)
+	addrs, err := meta.keystoreGetFreshAddresses(s.client, change, size)
 	if err != nil {
 		return addrs, err
 	}
@@ -158,7 +158,7 @@ func (s *RedisKeystore) GetAllObservableAddresses(
 	}
 
 	addrs, err := meta.keystoreGetAllObservableAddresses(
-		s.client, id, change, fromIndex, toIndex,
+		s.client, change, fromIndex, toIndex,
 	)
 	if err != nil {
 		return addrs, err
@@ -170,7 +170,6 @@ func (s *RedisKeystore) GetAllObservableAddresses(
 	}
 
 	return addrs, nil
-
 }
 
 func (s *RedisKeystore) GetDerivationPath(id uuid.UUID, address string) (DerivationPath, error) {
