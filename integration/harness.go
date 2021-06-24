@@ -33,7 +33,7 @@ func startKeychain() {
 	lis = bufconn.Listen(bufSize)
 	s := grpc.NewServer()
 
-	keychainController, err := controllers.NewKeychainController(&redis.Options{
+	keychainController, err := controllers.NewKeychainController("redis", &redis.Options{
 		Addr:     "localhost:6379",
 		Password: "", // no password set
 		DB:       0,  // use default DB

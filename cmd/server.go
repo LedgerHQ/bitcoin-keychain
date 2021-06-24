@@ -16,7 +16,7 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
-func serve(grpcAddr string, redisOpts *redis.Options) {
+func serve(grpcAddr string, storeType string, redisOpts *redis.Options) {
 	conn, err := net.Listen("tcp", grpcAddr)
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -26,7 +26,7 @@ func serve(grpcAddr string, redisOpts *redis.Options) {
 
 	s := grpc.NewServer()
 
-	keychainController, err := controllers.NewKeychainController(redisOpts)
+	keychainController, err := controllers.NewKeychainController(storeType, redisOpts)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"error": err,
@@ -89,7 +89,9 @@ func main() {
 		}
 	}
 
-	serve(grpcAddr, &redis.Options{
+	storeType := configProvider.GetString("store_type")
+
+	serve(grpcAddr, storeType, &redis.Options{
 		Addr:      redisAddr,
 		Password:  redisPassword, // set password
 		DB:        redisDB,       // use default DB

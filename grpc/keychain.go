@@ -15,7 +15,7 @@ import (
 // interface.
 type Controller struct{}
 
-var store *keystore.RedisKeystore
+var store keystore.Keystore
 
 func (c Controller) CreateKeychain(
 	ctx context.Context, request *pb.CreateKeychainRequest,
@@ -303,10 +303,23 @@ func (c Controller) GetAddressesPublicKeys(
 
 // NewKeychainController returns a new instance of a Controller struct that
 // implements the pb.KeychainServiceServer interface.
-func NewKeychainController(redisOpts *redis.Options) (*Controller, error) {
+func NewKeychainController(storeType string, redisOpts *redis.Options) (*Controller, error) {
 	var err error
 
-	store, err = keystore.NewRedisKeystore(redisOpts)
+	switch storeType {
+	case "redis":
+		store, err = keystore.NewRedisKeystore(redisOpts)
+		log.Info("creating redis backend")
+	case "memory":
+		store = keystore.NewInMemoryKeystore()
+		log.Info("creating memory backend")
+	case "wd":
+		store, err = keystore.NewWDKeystore(redisOpts)
+		log.Info("creating walletdaemon backend")
+	default:
+		return nil, fmt.Errorf("unknown store type: %s", storeType)
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("Creating redis client failed: %w", err)
 	}
