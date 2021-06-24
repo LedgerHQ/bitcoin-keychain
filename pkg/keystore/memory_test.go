@@ -98,6 +98,8 @@ func TestInMemoryKeystore_GetCreate(t *testing.T) {
 		fromChainCode *FromChainCode
 		scheme        Scheme
 		network       chaincfg.Network
+		index         uint32
+		info          string
 		want          KeychainInfo
 		wantErr       error
 	}{
@@ -106,6 +108,8 @@ func TestInMemoryKeystore_GetCreate(t *testing.T) {
 			extendedKey: "xpub1111",
 			scheme:      BIP84,
 			network:     chaincfg.BitcoinMainnet,
+			index:       1,
+			info:        "",
 			want: KeychainInfo{
 				ExternalDescriptor:          "wpkh(xpub1111/0/*)",
 				InternalDescriptor:          "wpkh(xpub1111/1/*)",
@@ -118,6 +122,8 @@ func TestInMemoryKeystore_GetCreate(t *testing.T) {
 				LookaheadSize:               20,
 				Scheme:                      "BIP84",
 				Network:                     chaincfg.BitcoinMainnet,
+				AccountIndex:                1,
+				Info:                        "",
 			},
 		},
 		{
@@ -125,6 +131,8 @@ func TestInMemoryKeystore_GetCreate(t *testing.T) {
 			fromChainCode: &FromChainCode{},
 			scheme:        BIP84,
 			network:       chaincfg.BitcoinMainnet,
+			index:         2,
+			info:          "random info",
 			want: KeychainInfo{
 				ExternalDescriptor:          "wpkh(xpub1111/0/*)",
 				InternalDescriptor:          "wpkh(xpub1111/1/*)",
@@ -137,6 +145,8 @@ func TestInMemoryKeystore_GetCreate(t *testing.T) {
 				LookaheadSize:               20,
 				Scheme:                      "BIP84",
 				Network:                     chaincfg.BitcoinMainnet,
+				AccountIndex:                2,
+				Info:                        "random info",
 			},
 		},
 	}
@@ -146,7 +156,9 @@ func TestInMemoryKeystore_GetCreate(t *testing.T) {
 			keystore := NewMockInMemoryKeystore()
 
 			gotInfo, err := keystore.Create(
-				tt.extendedKey, tt.fromChainCode, tt.scheme, tt.network, DefaultLookaheadSize)
+				tt.extendedKey, tt.fromChainCode, tt.scheme, tt.network,
+				DefaultLookaheadSize, tt.index, tt.info,
+			)
 			if err != nil && tt.wantErr == nil {
 				t.Fatalf("Create() unexpected error: %v", err)
 			}
@@ -215,7 +227,9 @@ func TestInMemoryKeystore_GetFreshAddress(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			keystore := NewMockInMemoryKeystore()
 			info, err := keystore.Create(
-				tt.extendedKey, nil, tt.scheme, tt.network, DefaultLookaheadSize)
+				tt.extendedKey, nil, tt.scheme, tt.network, DefaultLookaheadSize,
+				1, "",
+			)
 			if err != nil {
 				panic(err)
 			}
@@ -283,7 +297,9 @@ func TestInMemoryKeystore_GetFreshAddresses(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			keystore := NewMockInMemoryKeystore()
 			info, err := keystore.Create(
-				tt.extendedKey, nil, tt.scheme, tt.network, DefaultLookaheadSize)
+				tt.extendedKey, nil, tt.scheme, tt.network, DefaultLookaheadSize,
+				1, "",
+			)
 			if err != nil {
 				panic(err)
 			}
@@ -315,7 +331,7 @@ func TestInMemoryKeystore_MarkPathAsUsed(t *testing.T) {
 	keystore := NewMockInMemoryKeystore()
 
 	info, err := keystore.Create(
-		"xpub1111", nil, BIP84, chaincfg.BitcoinMainnet, DefaultLookaheadSize)
+		"xpub1111", nil, BIP84, chaincfg.BitcoinMainnet, DefaultLookaheadSize, 1, "")
 	if err != nil {
 		panic(err)
 	}
@@ -537,7 +553,7 @@ func TestInMemoryKeystore_GetAddressesPublicKeys(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			keystore := NewMockInMemoryKeystore()
 			info, err := keystore.Create(
-				tt.extendedKey, nil, tt.scheme, tt.network, DefaultLookaheadSize)
+				tt.extendedKey, nil, tt.scheme, tt.network, DefaultLookaheadSize, 1, "")
 			if err != nil {
 				panic(err)
 			}
@@ -575,7 +591,7 @@ func TestInMemoryKeystore_Reset(t *testing.T) {
 	keystore := NewMockInMemoryKeystore()
 
 	info, err := keystore.Create(
-		"xpub1111", nil, BIP84, chaincfg.BitcoinMainnet, DefaultLookaheadSize)
+		"xpub1111", nil, BIP84, chaincfg.BitcoinMainnet, DefaultLookaheadSize, 1, "")
 	if err != nil {
 		panic(err)
 	}

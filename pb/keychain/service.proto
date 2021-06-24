@@ -110,6 +110,8 @@ message CreateKeychainRequest {
   Scheme scheme = 3;
   uint32 lookahead_size = 4;
   ChainParams chain_params = 5;
+  uint32 index = 6;
+  string info = 7;
 }
 
 message FromChainCode {

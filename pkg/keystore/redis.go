@@ -77,7 +77,7 @@ func (s *RedisKeystore) Reset(id uuid.UUID) error {
 }
 
 func (s *RedisKeystore) Create(
-	extendedPublicKey string, fromChainCode *FromChainCode, scheme Scheme, net chaincfg.Network, lookaheadSize uint32,
+	extendedPublicKey string, fromChainCode *FromChainCode, scheme Scheme, net chaincfg.Network, lookaheadSize uint32, index uint32, info string,
 ) (KeychainInfo, error) {
 	meta, err := keystoreCreate(
 		extendedPublicKey,
@@ -85,6 +85,8 @@ func (s *RedisKeystore) Create(
 		scheme,
 		net,
 		lookaheadSize,
+		index,
+		info,
 		s.client,
 	)
 
