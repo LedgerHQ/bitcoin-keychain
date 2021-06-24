@@ -123,7 +123,7 @@ func TestInMemoryKeystore_GetCreate(t *testing.T) {
 				Scheme:                      "BIP84",
 				Network:                     chaincfg.BitcoinMainnet,
 				AccountIndex:                1,
-				Info:                        "",
+				Metadata:                    "",
 			},
 		},
 		{
@@ -146,7 +146,7 @@ func TestInMemoryKeystore_GetCreate(t *testing.T) {
 				Scheme:                      "BIP84",
 				Network:                     chaincfg.BitcoinMainnet,
 				AccountIndex:                2,
-				Info:                        "random info",
+				Metadata:                    "random info",
 			},
 		},
 	}

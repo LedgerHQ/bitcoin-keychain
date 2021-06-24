@@ -60,7 +60,7 @@ func (s *InMemoryKeystore) Reset(id uuid.UUID) error {
 }
 
 func (s *InMemoryKeystore) Create(
-	extendedPublicKey string, fromChainCode *FromChainCode, scheme Scheme, net chaincfg.Network, lookaheadSize uint32, index uint32, info string,
+	extendedPublicKey string, fromChainCode *FromChainCode, scheme Scheme, net chaincfg.Network, lookaheadSize uint32, index uint32, metadata string,
 ) (KeychainInfo, error) {
 	meta, err := keystoreCreate(
 		extendedPublicKey,
@@ -69,7 +69,7 @@ func (s *InMemoryKeystore) Create(
 		net,
 		lookaheadSize,
 		index,
-		info,
+		metadata,
 		s.client,
 	)
 

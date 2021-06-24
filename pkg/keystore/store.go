@@ -34,7 +34,7 @@ type Keystore interface {
 	// Only initial state is populated, so no addresses will be inserted into the
 	// keystore by this method.
 	Create(extendedPublicKey string, fromChainCode *FromChainCode, scheme Scheme, net chaincfg.Network,
-		lookaheadSize uint32, index uint32, info string) (KeychainInfo, error)
+		lookaheadSize uint32, index uint32, metadata string) (KeychainInfo, error)
 	// GetFreshAddress retrieves an unused address from the keystore at a
 	// given Change index, for the keychain corresponding to the provided keychain
 	// ID.
@@ -111,7 +111,7 @@ type KeychainInfo struct {
 	NonConsecutiveExternalIndexes []uint32         `json:"non_consecutive_external_indexes"` // Used external indexes that are creating a gap in the derivation
 	NonConsecutiveInternalIndexes []uint32         `json:"non_consecutive_internal_indexes"` // Used internal indexes that are creating a gap in the derivation
 	AccountIndex                  uint32           `json:"account_index"`                    // Account index
-	Info                          string           `json:"info"`                             // Additional info, unspecified
+	Metadata                      string           `json:"metadata"`                         // Additional info, unspecified
 }
 
 // Meta is a struct containing account details corresponding to a keychain ID,
@@ -370,7 +370,7 @@ func keystoreCreate(
 	net chaincfg.Network,
 	lookaheadSize uint32,
 	index uint32,
-	info string,
+	metadata string,
 	client bitcoin.CoinServiceClient,
 ) (Meta, error) {
 	if fromChainCode != nil {
@@ -423,7 +423,7 @@ func keystoreCreate(
 		Scheme:                      scheme,
 		Network:                     net,
 		AccountIndex:                index,
-		Info:                        info,
+		Metadata:                    metadata,
 	}
 
 	meta := Meta{

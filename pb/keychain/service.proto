@@ -110,8 +110,10 @@ message CreateKeychainRequest {
   Scheme scheme = 3;
   uint32 lookahead_size = 4;
   ChainParams chain_params = 5;
-  uint32 index = 6;
-  string info = 7;
+  uint32 account_index = 6;
+  // optional backend dependent field
+  // In case of "wd" type, we expect "libcore_prefix:workspace"
+  string metadata = 7;
 }
 
 message FromChainCode {
