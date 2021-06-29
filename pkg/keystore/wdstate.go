@@ -81,7 +81,7 @@ func ParseKeychainState(b64pref string) (WDKeychainState, error) {
 func EncodeKeychainState(state WDKeychainState) (string, error) {
 	var buffer bytes.Buffer
 
-	var version uint32 = 0
+	var version uint32
 	err := binary.Write(&buffer, binary.LittleEndian, version)
 	if err != nil {
 		return "", err

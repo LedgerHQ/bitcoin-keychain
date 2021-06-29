@@ -113,14 +113,13 @@ func TestRaceCover() error {
 func Lint() error {
 	linterArgs := []string{
 		"run",
-		"-E=golint",
-		"-E=interfacer",
+		"-E=revive",
 		"-E=unconvert",
 		"-E=dupl",
 		"-E=goconst",
 		"-E=gofmt",
 		"-E=goimports",
-		"-E=maligned",
+		"-E=govet",
 		"-E=depguard",
 		"-E=misspell",
 		"-E=whitespace",

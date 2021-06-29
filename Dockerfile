@@ -1,4 +1,4 @@
-FROM golang:1.15-alpine as builder
+FROM golang:1.16-alpine as builder
 
 # System setup
 RUN apk update && apk add git curl build-base autoconf automake libtool

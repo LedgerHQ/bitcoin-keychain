@@ -49,18 +49,13 @@ func (s *baseRedisKeystore) Reset(id uuid.UUID) error {
 
 	meta.ResetKeychainMeta()
 
-	if err := set(s.db, id.String(), meta); err != nil {
-		return err
-	}
-
-	return nil
+	return set(s.db, id.String(), meta)
 }
 
 func (s *baseRedisKeystore) Create(
 	extendedPublicKey string, fromChainCode *FromChainCode, scheme Scheme,
 	net chaincfg.Network, lookaheadSize uint32, index uint32, metadata string,
 ) (KeychainInfo, error) {
-
 	meta, err := keystoreCreate(
 		extendedPublicKey,
 		fromChainCode,
@@ -81,7 +76,6 @@ func (s *baseRedisKeystore) Create(
 	}
 
 	return meta.Main, nil
-
 }
 
 func (s *baseRedisKeystore) GetDerivationPath(id uuid.UUID, address string) (DerivationPath, error) {

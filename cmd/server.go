@@ -56,7 +56,7 @@ func main() {
 		port          int32 = 50052
 		redisHost     string
 		redisPort     int32 = 6379
-		redisDB       int   = 0
+		redisDB       int
 		redisPassword string
 		tlsConfig     *tls.Config
 	)

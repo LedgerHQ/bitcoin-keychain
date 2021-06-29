@@ -57,6 +57,5 @@ func TestWDState(t *testing.T) {
 		if !reflect.DeepEqual(state, test.state) {
 			t.Fatal("unexpected result for parse", state)
 		}
-
 	}
 }

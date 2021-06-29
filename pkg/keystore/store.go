@@ -102,15 +102,15 @@ type KeychainInfo struct {
 	ExtendedPublicKey             string           `json:"extended_public_key"`              // Extended public key serialized with standard HD version bytes
 	SLIP32ExtendedPublicKey       string           `json:"slip32_extended_public_key"`       // Extended public key serialized with SLIP-0132 HD version bytes
 	ExternalXPub                  string           `json:"external_xpub"`                    // External chain extended public key at HD tree depth 4
-	MaxConsecutiveExternalIndex   uint32           `json:"max_consecutive_external_index"`   // Max consecutive index (without any gap) on the external chain
 	InternalXPub                  string           `json:"internal_xpub"`                    // Internal chain extended public key at HD tree depth 4
+	MaxConsecutiveExternalIndex   uint32           `json:"max_consecutive_external_index"`   // Max consecutive index (without any gap) on the external chain
 	MaxConsecutiveInternalIndex   uint32           `json:"max_consecutive_internal_index"`   // Max consecutive index (without any gap) on the internal chain
 	LookaheadSize                 uint32           `json:"lookahead_size"`                   // Numerical size of the lookahead zone
+	AccountIndex                  uint32           `json:"account_index"`                    // Account index
 	Scheme                        Scheme           `json:"scheme"`                           // String identifier for keychain scheme
 	Network                       chaincfg.Network `json:"network"`                          // String denoting the network to use for encoding addresses
 	NonConsecutiveExternalIndexes []uint32         `json:"non_consecutive_external_indexes"` // Used external indexes that are creating a gap in the derivation
 	NonConsecutiveInternalIndexes []uint32         `json:"non_consecutive_internal_indexes"` // Used internal indexes that are creating a gap in the derivation
-	AccountIndex                  uint32           `json:"account_index"`                    // Account index
 	Metadata                      string           `json:"metadata"`                         // Additional info, unspecified
 }
 

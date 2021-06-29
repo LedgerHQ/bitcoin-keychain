@@ -146,11 +146,7 @@ func (s *WDKeystore) updateState(keychainInfo KeychainInfo) error {
 		return err
 	}
 
-	if err := set(s.db, stateKey, stateValue); err != nil {
-		return err
-	}
-
-	return nil
+	return set(s.db, stateKey, stateValue)
 }
 
 type WdKey struct {
@@ -198,7 +194,7 @@ func wdValues(wdkey WdKey, addr AddressInfo) (map[string]string, error) {
 	ret[ns+encodedAddrKey] = encodedAddrValue
 
 	pathKey := fmt.Sprintf("%spath:%d/%d", prefix, addr.Derivation[0], addr.Derivation[1])
-	pathValue := fmt.Sprintf("%s", addr.Address)
+	pathValue := addr.Address
 	encodedPathKey := base64.StdEncoding.EncodeToString([]byte(pathKey))
 	encodedPathValue := base64.StdEncoding.EncodeToString([]byte(pathValue))
 
@@ -242,16 +238,18 @@ func keychainInfoToWdState(keychainInfo KeychainInfo) WDKeychainState {
 }
 
 func keychainInfoToWalletType(keychainInfo KeychainInfo) (string, error) {
-	if keychainInfo.Network == chaincfg.LitecoinMainnet {
+	switch keychainInfo.Network {
+	case chaincfg.LitecoinMainnet:
 		return "litecoin", nil
-	} else if keychainInfo.Network == chaincfg.BitcoinMainnet {
+	case chaincfg.BitcoinMainnet:
+		// BIP49 is not supported by vault
+
 		if keychainInfo.Scheme == BIP44 {
 			return "bitcoin", nil
 		} else if keychainInfo.Scheme == BIP84 {
 			return "bitcoin_native_segwit", nil
 		}
-		// BIP49 is not supported by vault
-	} else if keychainInfo.Network == chaincfg.BitcoinTestnet3 {
+	case chaincfg.BitcoinTestnet3:
 		if keychainInfo.Scheme == BIP44 {
 			return "bitcoin_testnet", nil
 		} else if keychainInfo.Scheme == BIP84 {
@@ -260,6 +258,5 @@ func keychainInfoToWalletType(keychainInfo KeychainInfo) (string, error) {
 	}
 
 	return "", fmt.Errorf("unknown network %s and scheme %s",
-		keychainInfo.Network, keychainInfo.Scheme,
-	)
+		keychainInfo.Network, keychainInfo.Scheme)
 }
