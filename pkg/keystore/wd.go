@@ -247,17 +247,23 @@ func keychainInfoToWalletType(keychainInfo KeychainInfo) (string, error) {
 	case chaincfg.LitecoinMainnet:
 		return "litecoin", nil
 	case chaincfg.BitcoinMainnet:
-		// BIP49 is not supported by vault
-
-		if keychainInfo.Scheme == BIP44 {
+		switch keychainInfo.Scheme {
+		case BIP44:
 			return "bitcoin", nil
-		} else if keychainInfo.Scheme == BIP84 {
+		case BIP49:
+			// XXX: bip49 is not supported in vault, this value will never be
+			// seen in redis, but it is useful for lama test suite
+			return "bitcoin_segwit", nil
+		case BIP84:
 			return "bitcoin_native_segwit", nil
 		}
 	case chaincfg.BitcoinTestnet3:
-		if keychainInfo.Scheme == BIP44 {
+		switch keychainInfo.Scheme {
+		case BIP44:
 			return "bitcoin_testnet", nil
-		} else if keychainInfo.Scheme == BIP84 {
+		case BIP49:
+			return "bitcoin_testnet_segwit", nil
+		case BIP84:
 			return "bitcoin_testnet_native_segwit", nil
 		}
 	}
