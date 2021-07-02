@@ -11,7 +11,7 @@ WORKDIR /tmp/
 RUN tar xvzf protobuf.tar.gz
 WORKDIR /tmp/protobuf-$PROTOBUF_VERSION
 RUN mkdir /tmp/protobuf
-RUN ./autogen.sh && ./configure --prefix=/tmp/protobuf && make && make install
+RUN ./autogen.sh && ./configure --prefix=/tmp/protobuf && make -j8 && make install
 RUN ln -s /tmp/protobuf/bin/protoc /usr/local/bin/protoc
 
 # Install mage
