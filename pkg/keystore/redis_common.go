@@ -3,6 +3,7 @@ package keystore
 import (
 	"context"
 	"encoding/json"
+	"reflect"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
@@ -100,12 +101,20 @@ func (s *baseRedisKeystore) GetAddressesPublicKeys(id uuid.UUID, derivations []D
 }
 
 func set(c *redis.Client, key string, value interface{}) error {
-	p, err := json.Marshal(value)
-	if err != nil {
-		return err
+	var redisValue string
+
+	v, ok := value.(string)
+	if ok {
+		redisValue = v
+	} else {
+		p, err := json.Marshal(value)
+		if err != nil {
+			return err
+		}
+		redisValue = string(p)
 	}
 
-	return c.Set(context.Background(), key, string(p), 0).Err()
+	return c.Set(context.Background(), key, redisValue, 0).Err()
 }
 
 func get(c *redis.Client, key string, dest interface{}) error {
@@ -114,5 +123,10 @@ func get(c *redis.Client, key string, dest interface{}) error {
 		return err
 	}
 
-	return json.Unmarshal([]byte(p), dest)
+	err = json.Unmarshal([]byte(p), dest)
+	if err != nil {
+		va := reflect.ValueOf(p)
+		reflect.ValueOf(dest).Elem().Set(va)
+	}
+	return nil
 }
