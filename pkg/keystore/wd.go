@@ -55,28 +55,13 @@ func (s *WDKeystore) GetFreshAddresses(id uuid.UUID, change Change, size uint32)
 		return addrs, err
 	}
 
-	wdkey, err := keychainInfoToWDKey(meta.Main)
-	if err != nil {
-		return []AddressInfo{}, err
-	}
-	for _, addr := range addrs {
-		kv, err := wdValues(wdkey, addr)
-		if err != nil {
-			return []AddressInfo{}, ErrKeychainNotFound
-		}
-		for k, v := range kv {
-			if err := set(s.db, k, v); err != nil {
-				return []AddressInfo{}, err
-			}
-		}
-	}
-
-	stateKey, stateValue, err := keychainInfoToStateKV(wdkey, meta.Main)
+	err = s.updateAddresses(meta.Main, addrs)
 	if err != nil {
 		return []AddressInfo{}, err
 	}
 
-	if err := set(s.db, stateKey, stateValue); err != nil {
+	err = s.updateState(meta.Main)
+	if err != nil {
 		return []AddressInfo{}, err
 	}
 
@@ -134,6 +119,12 @@ func (s *WDKeystore) GetAllObservableAddresses(
 	if err != nil {
 		return nil, err
 	}
+
+	err = s.updateAddresses(meta.Main, addrs)
+	if err != nil {
+		return nil, err
+	}
+
 	return addrs, nil
 }
 
@@ -153,6 +144,27 @@ func (s *WDKeystore) updateState(keychainInfo KeychainInfo) error {
 
 	return set(s.db, stateKey, stateValue)
 }
+
+func (s *WDKeystore) updateAddresses(keychainInfo KeychainInfo, addrs []AddressInfo) error {
+	wdkey, err := keychainInfoToWDKey(keychainInfo)
+	if err != nil {
+		return err
+	}
+	for _, addr := range addrs {
+		kv, err := wdValues(wdkey, addr)
+		if err != nil {
+			return ErrKeychainNotFound
+		}
+		for k, v := range kv {
+			if err := set(s.db, k, v); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
 
 type WdKey struct {
 	Prefix     string `json:"prefix"`
