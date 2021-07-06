@@ -62,6 +62,9 @@ type Keystore interface {
 	// internally fetches the derivation path of the address from the keystore,
 	// and then marks this DerivationPath value as used.
 	MarkAddressAsUsed(id uuid.UUID, address string) error
+	// GetAllObservableAddresses returns all addresses with derivation path in
+	// the range [fromIndex..toIndex] (inclusive)
+	// if toIndex is 0, we use lookAheadSize (exclusive)
 	GetAllObservableAddresses(id uuid.UUID, change Change,
 		fromIndex uint32, toIndex uint32) ([]AddressInfo, error)
 	// GetDerivationPath reads the address-to-derivations mapping in the keystore,
@@ -346,10 +349,10 @@ func (m Meta) MaxObservableIndex(change Change) (uint32, error) {
 	switch change {
 	case External:
 		n := uint32(len(m.Main.NonConsecutiveExternalIndexes))
-		return m.Main.MaxConsecutiveExternalIndex + n + m.Main.LookaheadSize, nil
+		return m.Main.MaxConsecutiveExternalIndex + n + m.Main.LookaheadSize - 1, nil
 	case Internal:
 		n := uint32(len(m.Main.NonConsecutiveInternalIndexes))
-		return m.Main.MaxConsecutiveInternalIndex + n + m.Main.LookaheadSize, nil
+		return m.Main.MaxConsecutiveInternalIndex + n + m.Main.LookaheadSize - 1, nil
 	default:
 		return 0, errors.Wrapf(ErrUnrecognizedChange, fmt.Sprint(change))
 	}
@@ -561,7 +564,7 @@ func (m *Meta) keystoreGetAllObservableAddresses(
 	client bitcoin.CoinServiceClient,
 	change Change,
 	fromIndex uint32,
-	toIndex uint32,
+	toIndex uint32, // 0 is replaced by large value in keychain.go
 ) ([]AddressInfo, error) {
 	maxObservableIndex, err := m.MaxObservableIndex(change)
 	if err != nil {

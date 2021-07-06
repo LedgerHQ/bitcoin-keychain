@@ -239,3 +239,36 @@ func TestKeychainRegistration(t *testing.T) {
 		})
 	}
 }
+
+func TestKeychainGetAllObservableAddresses(t *testing.T) {
+	ctx := context.Background()
+	client, conn := keychainClient(ctx)
+	defer conn.Close()
+
+	lookAheadSize := 20
+
+	info, err := client.CreateKeychain(ctx, &pb.CreateKeychainRequest{
+		Account:       &pb.CreateKeychainRequest_ExtendedPublicKey{ExtendedPublicKey: BitcoinMainnetP2WPKH.ExtendedPublicKey},
+		LookaheadSize: uint32(lookAheadSize),
+		ChainParams:   BitcoinMainnetP2WPKH.ChainParams,
+		Scheme:        BitcoinMainnetP2WPKH.Scheme,
+	})
+	if err != nil {
+		t.Fatalf("failed to create keychain - error = %v", err)
+	}
+
+	addrs, err := client.GetAllObservableAddresses(ctx, &pb.GetAllObservableAddressesRequest{
+		KeychainId: info.KeychainId,
+		Change:     1,
+		FromIndex:  0,
+		ToIndex:    0,
+	})
+	if err != nil {
+		t.Fatalf("cannot GetAllObservableAddresses")
+	}
+
+	if len(addrs.Addresses) != lookAheadSize {
+		t.Fatalf("length %d should be equal to LookaheadSize (%d)",
+			len(addrs.Addresses), lookAheadSize)
+	}
+}
